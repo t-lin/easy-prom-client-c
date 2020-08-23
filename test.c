@@ -3,22 +3,15 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "libpromclient.h"
+#include "promClient.h"
 
 #define NUM_BUFS 100
-
-GoString cStr2GoStr(const char *in) {
-    GoString tmp = {in, (ptrdiff_t)strlen(in)};
-    return tmp;
-}
 
 int main() {
 
     printf("Before starting prom server...\n");
 
-    GoString gsPromEnd = cStr2GoStr(":12345");
-    GoString gsMetricsPath = cStr2GoStr("/metrics");
-    StartPromServer(gsPromEnd, gsMetricsPath);
+    StartPromServer(":12345", "/metrics");
 
     printf("After starting prom server...\n");
 

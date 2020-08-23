@@ -1,4 +1,4 @@
-a.out: test.c libpromclient.a
+a.out: test.c libpromclient.a promClient.h
 	gcc -Wall -std=c99 -I. $< -L. -lpromclient -pthread -o $@
 
 libpromclient.a: promClient.go
