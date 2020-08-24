@@ -1,6 +1,8 @@
 #ifndef _PROM_CLIENT_H_
 #define _PROM_CLIENT_H_
 
+#include <stdarg.h>
+
 #include "libpromclient.h"
 
 /* ========== HELPER FUNCTIONS ========== */
@@ -20,10 +22,50 @@ void StartPromServer(const char* promEndpoint, const char* metricsPath) {
 }
 
 void* NewGauge(const char* name, const char* help) {
+    // TODO: Check to ensure name has no dashes
     GoString gsName = cStr2GoStr(name);
     GoString gsHelp = cStr2GoStr(help);
 
     return (void*)goNewGauge(gsName, gsHelp);
+}
+
+// nLabels: The number of labels that follow. Each label must be a c-string.
+void* NewGaugeVec(const char* name, const char* help, int nLabels, ...) {
+    va_list vlLabels;
+    va_start(vlLabels, nLabels);
+
+    char* tmp = NULL;
+    GoString gsLabels[nLabels];
+    for (int i = 0; i < nLabels; i++) {
+        tmp = va_arg(vlLabels, char*);
+        gsLabels[i] = cStr2GoStr(tmp);
+    }
+    va_end(vlLabels);
+
+    GoSlice gLabelSlice = {(void*)gsLabels, (GoInt)nLabels, (GoInt)nLabels};
+
+    GoString gsName = cStr2GoStr(name);
+    GoString gsHelp = cStr2GoStr(help);
+
+    return (void*)goNewGaugeVec(gsName, gsHelp, gLabelSlice);
+}
+
+// nLabels: The number of label values that follow. Each value must be a c-string.
+void* GaugeWithLabelValues(void* pGaugeVec, int nLabelVals, ...) {
+    va_list vlLabelVals;
+    va_start(vlLabelVals, nLabelVals);
+
+    char* tmp = NULL;
+    GoString gsLabelVals[nLabelVals];
+    for (int i = 0; i < nLabelVals; i++) {
+        tmp = va_arg(vlLabelVals, char*);
+        gsLabelVals[i] = cStr2GoStr(tmp);
+    }
+    va_end(vlLabelVals);
+
+    GoSlice gLabValSlice = {(void*)gsLabelVals, (GoInt)nLabelVals, (GoInt)nLabelVals};
+
+    return (void*)goGaugeWithLabelValues((GoUintptr)pGaugeVec, gLabValSlice);
 }
 
 void SetGauge(void* pGauge, double val) {

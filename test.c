@@ -6,12 +6,12 @@
 
 #include "promClient.h"
 
-#define NUM_ITER 100
-#define TEMP_MAX 100.0
+#define NUM_ITER 10
+#define MY_RAND_MAX 1000.0
 
-// Generates random temperature between [0, TEMP_MAX]
-double generateRandTemp() {
-    return (double)rand() / ((double)RAND_MAX / TEMP_MAX);
+// Generates random value between [0, MY_RAND_MAX]
+double generateRandVal() {
+    return (double)rand() / ((double)RAND_MAX / MY_RAND_MAX);
 }
 
 int main() {
@@ -22,13 +22,25 @@ int main() {
     printf("After starting prom server...\n");
 
     // Create a gauge for temperature
-    void* tempGauge = NewGauge("temperature", "Test temperature gauge");
+    void* testGauge = NewGauge("test_gauge", "Test gauge's help");
+
+    void* testGaugeVec = NewGaugeVec("testGaugeVec", "Test gauge vec", 2, "label1", "label2");
+    void* testGauge2 = GaugeWithLabelValues(testGaugeVec, 2, "label-val-1", "label-val-2");
 
     double temp = 0;
     for (int i = 0; i < NUM_ITER; i++) {
-        temp = generateRandTemp();
-        printf("%d: Setting temperature to %lf\n", i + 1, temp);
-        SetGauge(tempGauge, temp);
+        temp = generateRandVal();
+        printf("%d: Setting gauge to %lf\n", i + 1, temp);
+        SetGauge(testGauge, temp);
+        SetGauge(testGauge2, temp);
+        sleep(1);
+    }
+
+    void* testGauge3 = GaugeWithLabelValues(testGaugeVec, 2, "label-val-I", "label-val-II");
+    for (int i = 0; i < NUM_ITER; i++) {
+        temp = generateRandVal();
+        printf("%d: Setting gauge to %lf\n", i + 1, temp);
+        SetGauge(testGauge3, temp);
         sleep(1);
     }
 
