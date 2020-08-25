@@ -44,5 +44,16 @@ int main() {
         sleep(1);
     }
 
+    for (int i = 0; i < NUM_ITER; i++) {
+        if (i % 2 == 0) {
+            printf("%d: Adding %lf to gauge\n", i + 1, MY_RAND_MAX);
+            AddGauge(testGauge, MY_RAND_MAX);
+        } else {
+            printf("%d: Subtracting %lf from gauge\n", i + 1, MY_RAND_MAX);
+            SubGauge(testGauge, MY_RAND_MAX);
+        }
+        sleep(1);
+    }
+
     return 0;
 }

@@ -89,4 +89,16 @@ void SetGauge(void* pGauge, double val) {
     return;
 }
 
+void AddGauge(void* pGauge, double val) {
+    goAddGauge((GoUintptr)pGauge, (GoFloat64)val);
+
+    return;
+}
+
+void SubGauge(void* pGauge, double val) {
+    goSubGauge((GoUintptr)pGauge, (GoFloat64)val);
+
+    return;
+}
+
 #endif

@@ -91,4 +91,16 @@ func goSetGauge(uPtrGauge uintptr, val float64) {
 	gauge.Set(val)
 }
 
+//export goAddGauge
+func goAddGauge(uPtrGauge uintptr, val float64) {
+	gauge := gaugeHandles[unsafe.Pointer(uPtrGauge)]
+	gauge.Add(val)
+}
+
+//export goSubGauge
+func goSubGauge(uPtrGauge uintptr, val float64) {
+	gauge := gaugeHandles[unsafe.Pointer(uPtrGauge)]
+	gauge.Sub(val)
+}
+
 func main() {}
