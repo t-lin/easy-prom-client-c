@@ -21,7 +21,7 @@
 #include "libpromclient.h"
 
 /* ========== HELPER FUNCTIONS ========== */
-GoString cStr2GoStr(const char* in) {
+inline GoString cStr2GoStr(const char* in) {
     GoString tmp = {in, (ptrdiff_t)strlen(in)};
     return tmp;
 }
@@ -37,7 +37,7 @@ void StartPromServer(const char* promEndpoint, const char* metricsPath) {
 }
 
 /* ========== GAUGE WRAPPER FUNCTIONS ========== */
-void* NewGauge(const char* name, const char* help) {
+inline void* NewGauge(const char* name, const char* help) {
     // TODO: Check to ensure name has no dashes
     GoString gsName = cStr2GoStr(name);
     GoString gsHelp = cStr2GoStr(help);
@@ -84,26 +84,26 @@ void* GaugeWithLabelValues(void* pGaugeVec, int nLabelVals, ...) {
     return (void*)goGaugeWithLabelValues((GoUintptr)pGaugeVec, gLabValSlice);
 }
 
-void SetGauge(void* pGauge, double val) {
-    goSetGauge((GoUintptr)pGauge, (GoFloat64)val);
+inline void GaugeSet(void* pGauge, double val) {
+    goGaugeSet((GoUintptr)pGauge, (GoFloat64)val);
 
     return;
 }
 
-void AddGauge(void* pGauge, double val) {
-    goAddGauge((GoUintptr)pGauge, (GoFloat64)val);
+inline void GaugeAdd(void* pGauge, double val) {
+    goGaugeAdd((GoUintptr)pGauge, (GoFloat64)val);
 
     return;
 }
 
-void SubGauge(void* pGauge, double val) {
-    goSubGauge((GoUintptr)pGauge, (GoFloat64)val);
+inline void GaugeSub(void* pGauge, double val) {
+    goGaugeSub((GoUintptr)pGauge, (GoFloat64)val);
 
     return;
 }
 
 /* ========== COUNTER WRAPPER FUNCTIONS ========== */
-void* NewCounter(const char* name, const char* help) {
+inline void* NewCounter(const char* name, const char* help) {
     // TODO: Check to ensure name has no dashes
     GoString gsName = cStr2GoStr(name);
     GoString gsHelp = cStr2GoStr(help);
@@ -150,8 +150,8 @@ void* CounterWithLabelValues(void* pCounterVec, int nLabelVals, ...) {
     return (void*)goCounterWithLabelValues((GoUintptr)pCounterVec, gLabValSlice);
 }
 
-void AddCounter(void* pCounter, double val) {
-    goAddCounter((GoUintptr)pCounter, (GoFloat64)val);
+inline void CounterAdd(void* pCounter, double val) {
+    goCounterAdd((GoUintptr)pCounter, (GoFloat64)val);
 
     return;
 }

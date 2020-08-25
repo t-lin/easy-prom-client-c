@@ -32,8 +32,8 @@ int main() {
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();
         printf("%d: Setting gauge to %lf\n", i + 1, temp);
-        SetGauge(testGauge, temp);
-        SetGauge(testGauge2, temp);
+        GaugeSet(testGauge, temp);
+        GaugeSet(testGauge2, temp);
         sleep(1);
     }
 
@@ -42,7 +42,7 @@ int main() {
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();
         printf("%d: Setting gauge to %lf\n", i + 1, temp);
-        SetGauge(testGauge3, temp);
+        GaugeSet(testGauge3, temp);
         sleep(1);
     }
 
@@ -50,10 +50,10 @@ int main() {
     for (int i = 0; i < NUM_ITER; i++) {
         if (i % 2 == 0) {
             printf("%d: Adding %lf to gauge\n", i + 1, MY_RAND_MAX);
-            AddGauge(testGauge, MY_RAND_MAX);
+            GaugeAdd(testGauge, MY_RAND_MAX);
         } else {
             printf("%d: Subtracting %lf from gauge\n", i + 1, MY_RAND_MAX);
-            SubGauge(testGauge, MY_RAND_MAX);
+            GaugeSub(testGauge, MY_RAND_MAX);
         }
         sleep(1);
     }
@@ -67,8 +67,8 @@ int main() {
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();
         printf("%d: Setting gauge to %lf\n", i + 1, temp);
-        AddCounter(testCounter, temp);
-        AddCounter(testCounter2, temp);
+        CounterAdd(testCounter, temp);
+        CounterAdd(testCounter2, temp);
         sleep(1);
     }
 

@@ -87,20 +87,20 @@ func goGaugeWithLabelValues(uPtrGaugeVec uintptr, labelVals []string) uintptr {
 	return uintptr(unsafe.Pointer(&gauge))
 }
 
-//export goSetGauge
-func goSetGauge(uPtrGauge uintptr, val float64) {
+//export goGaugeSet
+func goGaugeSet(uPtrGauge uintptr, val float64) {
 	gauge := gaugeHandles[unsafe.Pointer(uPtrGauge)]
 	gauge.Set(val)
 }
 
-//export goAddGauge
-func goAddGauge(uPtrGauge uintptr, val float64) {
+//export goGaugeAdd
+func goGaugeAdd(uPtrGauge uintptr, val float64) {
 	gauge := gaugeHandles[unsafe.Pointer(uPtrGauge)]
 	gauge.Add(val)
 }
 
-//export goSubGauge
-func goSubGauge(uPtrGauge uintptr, val float64) {
+//export goGaugeSub
+func goGaugeSub(uPtrGauge uintptr, val float64) {
 	gauge := gaugeHandles[unsafe.Pointer(uPtrGauge)]
 	gauge.Sub(val)
 }
@@ -147,8 +147,8 @@ func goCounterWithLabelValues(uPtrCounterVec uintptr, labelVals []string) uintpt
 	return uintptr(unsafe.Pointer(&counter))
 }
 
-//export goAddCounter
-func goAddCounter(uPtrCounter uintptr, val float64) {
+//export goCounterAdd
+func goCounterAdd(uPtrCounter uintptr, val float64) {
 	counter := counterHandles[unsafe.Pointer(uPtrCounter)]
 	counter.Add(val)
 }

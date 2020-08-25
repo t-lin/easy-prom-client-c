@@ -1,4 +1,4 @@
-CFLAGS += -I. -Wall -std=c99
+CFLAGS += -I. -Wall -std=c99 -O3
 LDFLAGS += -L. -lpromclient -pthread
 EXENAME = test
 ARNAME = promclient
