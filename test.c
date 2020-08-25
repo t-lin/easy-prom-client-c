@@ -27,6 +27,7 @@ int main() {
     void* testGaugeVec = NewGaugeVec("testGaugeVec", "Test gauge vec", 2, "label1", "label2");
     void* testGauge2 = GaugeWithLabelValues(testGaugeVec, 2, "label-val-1", "label-val-2");
 
+    // Test setting gauges created by NewGauge and GaugeVec.WithLabelValues
     double temp = 0;
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();
@@ -36,6 +37,7 @@ int main() {
         sleep(1);
     }
 
+    // Test setting a second gauge created by GaugeVec.WithLabelValues
     void* testGauge3 = GaugeWithLabelValues(testGaugeVec, 2, "label-val-I", "label-val-II");
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();
@@ -44,6 +46,7 @@ int main() {
         sleep(1);
     }
 
+    // Test adding and subtracting gauges
     for (int i = 0; i < NUM_ITER; i++) {
         if (i % 2 == 0) {
             printf("%d: Adding %lf to gauge\n", i + 1, MY_RAND_MAX);
@@ -52,6 +55,20 @@ int main() {
             printf("%d: Subtracting %lf from gauge\n", i + 1, MY_RAND_MAX);
             SubGauge(testGauge, MY_RAND_MAX);
         }
+        sleep(1);
+    }
+
+    // Test adding counters created by NewCounter and CounerVec.WithLabelValues
+    void* testCounter = NewCounter("test_counter", "Test counter's help");
+
+    void* testCounterVec = NewCounterVec("testCounterVec", "Test counter vec", 2, "label1", "label2");
+    void* testCounter2 = CounterWithLabelValues(testCounterVec, 2, "label-val-1", "label-val-2");
+
+    for (int i = 0; i < NUM_ITER; i++) {
+        temp = generateRandVal();
+        printf("%d: Setting gauge to %lf\n", i + 1, temp);
+        AddCounter(testCounter, temp);
+        AddCounter(testCounter2, temp);
         sleep(1);
     }
 

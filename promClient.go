@@ -33,8 +33,10 @@ var (
 	// Note that the "pointers" we pass back are raw unsigned integers,
 	// essentially a unique ID to the object (same concept as pointer).
 	// Use a separate function for explicit deletion of objects.
-	gaugeHandles    = make(map[unsafe.Pointer]prometheus.Gauge)
-	gaugeVecHandles = make(map[unsafe.Pointer]*prometheus.GaugeVec)
+	gaugeHandles      = make(map[unsafe.Pointer]prometheus.Gauge)
+	gaugeVecHandles   = make(map[unsafe.Pointer]*prometheus.GaugeVec)
+	counterHandles    = make(map[unsafe.Pointer]prometheus.Counter)
+	counterVecHandles = make(map[unsafe.Pointer]*prometheus.CounterVec)
 )
 
 //export goStartPromServer
@@ -101,6 +103,54 @@ func goAddGauge(uPtrGauge uintptr, val float64) {
 func goSubGauge(uPtrGauge uintptr, val float64) {
 	gauge := gaugeHandles[unsafe.Pointer(uPtrGauge)]
 	gauge.Sub(val)
+}
+
+//export goNewCounter
+func goNewCounter(name, help string) uintptr {
+	counter := promauto.NewCounter(prometheus.CounterOpts{
+		Name: name,
+		Help: help,
+	})
+
+	counterHandles[unsafe.Pointer(&counter)] = counter
+
+	return uintptr(unsafe.Pointer(&counter))
+}
+
+//export goNewCounterVec
+func goNewCounterVec(name, help string, labels []string) uintptr {
+	// NewCounterVec seems to keep a pointer to the labels slice.
+	// Since the labels slice was created in C, its pointers may not be
+	// valid after this call. Thus, perform deep copy of labels slice.
+	labelsCopy := make([]string, len(labels))
+	copy(labelsCopy, labels)
+	counterVec := promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: name,
+			Help: help,
+		},
+		labelsCopy,
+	)
+
+	counterVecHandles[unsafe.Pointer(counterVec)] = counterVec
+
+	return uintptr(unsafe.Pointer(counterVec))
+}
+
+//export goCounterWithLabelValues
+func goCounterWithLabelValues(uPtrCounterVec uintptr, labelVals []string) uintptr {
+	counterVec := counterVecHandles[unsafe.Pointer(uPtrCounterVec)]
+	counter := counterVec.WithLabelValues(labelVals...)
+
+	counterHandles[unsafe.Pointer(&counter)] = counter
+
+	return uintptr(unsafe.Pointer(&counter))
+}
+
+//export goAddCounter
+func goAddCounter(uPtrCounter uintptr, val float64) {
+	counter := counterHandles[unsafe.Pointer(uPtrCounter)]
+	counter.Add(val)
 }
 
 func main() {}

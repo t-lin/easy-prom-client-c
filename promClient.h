@@ -36,6 +36,7 @@ void StartPromServer(const char* promEndpoint, const char* metricsPath) {
     return;
 }
 
+/* ========== GAUGE WRAPPER FUNCTIONS ========== */
 void* NewGauge(const char* name, const char* help) {
     // TODO: Check to ensure name has no dashes
     GoString gsName = cStr2GoStr(name);
@@ -97,6 +98,60 @@ void AddGauge(void* pGauge, double val) {
 
 void SubGauge(void* pGauge, double val) {
     goSubGauge((GoUintptr)pGauge, (GoFloat64)val);
+
+    return;
+}
+
+/* ========== COUNTER WRAPPER FUNCTIONS ========== */
+void* NewCounter(const char* name, const char* help) {
+    // TODO: Check to ensure name has no dashes
+    GoString gsName = cStr2GoStr(name);
+    GoString gsHelp = cStr2GoStr(help);
+
+    return (void*)goNewCounter(gsName, gsHelp);
+}
+
+// nLabels: The number of labels that follow. Each label must be a c-string.
+void* NewCounterVec(const char* name, const char* help, int nLabels, ...) {
+    va_list vlLabels;
+    va_start(vlLabels, nLabels);
+
+    char* tmp = NULL;
+    GoString gsLabels[nLabels];
+    for (int i = 0; i < nLabels; i++) {
+        tmp = va_arg(vlLabels, char*);
+        gsLabels[i] = cStr2GoStr(tmp);
+    }
+    va_end(vlLabels);
+
+    GoSlice gLabelSlice = {(void*)gsLabels, (GoInt)nLabels, (GoInt)nLabels};
+
+    GoString gsName = cStr2GoStr(name);
+    GoString gsHelp = cStr2GoStr(help);
+
+    return (void*)goNewCounterVec(gsName, gsHelp, gLabelSlice);
+}
+
+// nLabels: The number of label values that follow. Each value must be a c-string.
+void* CounterWithLabelValues(void* pCounterVec, int nLabelVals, ...) {
+    va_list vlLabelVals;
+    va_start(vlLabelVals, nLabelVals);
+
+    char* tmp = NULL;
+    GoString gsLabelVals[nLabelVals];
+    for (int i = 0; i < nLabelVals; i++) {
+        tmp = va_arg(vlLabelVals, char*);
+        gsLabelVals[i] = cStr2GoStr(tmp);
+    }
+    va_end(vlLabelVals);
+
+    GoSlice gLabValSlice = {(void*)gsLabelVals, (GoInt)nLabelVals, (GoInt)nLabelVals};
+
+    return (void*)goCounterWithLabelValues((GoUintptr)pCounterVec, gLabValSlice);
+}
+
+void AddCounter(void* pCounter, double val) {
+    goAddCounter((GoUintptr)pCounter, (GoFloat64)val);
 
     return;
 }
