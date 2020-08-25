@@ -21,7 +21,7 @@ int main() {
     StartPromServer(":12345", "/metrics");
     printf("After starting prom server...\n");
 
-    // Create a gauge for temperature
+    // Create a test gauge
     void* testGauge = NewGauge("test_gauge", "Test gauge's help");
 
     const char* labels[2] = {"label1", "label2"};

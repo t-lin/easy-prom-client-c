@@ -13,8 +13,18 @@
  * limitations under the License.
  */
 
+/* NOTE: Yes, you're seeing this right. Implementation code in a header file!
+ *       For now, this is a small project/library, and it's not being built
+ *       into a shared library. Hence, I see no benefit from separating the
+ *       implementation from the header declarations, other than to appease
+ *       orthodoxy. If seeing this code triggers you, close the window.
+ */
+
 #ifndef _PROM_CLIENT_H_
 #define _PROM_CLIENT_H_
+
+#include <assert.h>
+#include <string.h>
 
 #include "libpromclient.h"
 
@@ -130,5 +140,80 @@ inline void CounterAdd(void* pCounter, double val) {
 
     return;
 }
+
+#ifdef __cplusplus
+#include <string>
+#include <vector>
+
+using std::string;
+using std::vector;
+
+/* ========== C++ CLASSES ========== */
+// Simply implement them as wrappers around the C functions
+// TODO: Make base Metric class and derive everything else from it
+
+class Gauge {
+    private:
+        void* _metric = nullptr; // "Pointer" to go-land object
+        string _name;
+        string _help;
+
+    public:
+        Gauge(string name, string help) : _name(name), _help(help) {
+            _metric = NewGauge(_name.c_str(), _help.c_str());
+        }
+
+        Gauge(string name, string help, void* pGauge) : _name(name), _help(help) {
+            assert(pGauge != nullptr);
+            _metric = pGauge;
+        }
+
+        ~Gauge() {}
+
+        void Set(double val) {
+            GaugeSet(_metric, val);
+        }
+
+        void Add(double val) {
+            GaugeAdd(_metric, val);
+        }
+
+        void Sub(double val) {
+            GaugeSub(_metric, val);
+        }
+
+};
+
+class GaugeVec {
+    private:
+        void* _metric = nullptr; // "Pointer" to go-land object
+        string _name;
+        string _help;
+        vector<string> _labels;
+
+    public:
+        GaugeVec(string name, string help, vector<string> labels)
+            : _name(name), _help(help), _labels(labels) {
+
+            const char* cStrLabels[_labels.size()];
+            for (unsigned int i = 0; i < _labels.size(); i++) {
+                cStrLabels[i] = _labels[i].c_str();
+            }
+            _metric = NewGaugeVec(_name.c_str(), _help.c_str(), _labels.size(), cStrLabels);
+        }
+
+        ~GaugeVec() {}
+
+        Gauge WithLabelValues(vector<string> labelVals) {
+            const char* cStrLabelVals[labelVals.size()];
+            for (unsigned int i = 0; i < labelVals.size(); i++) {
+                cStrLabelVals[i] = labelVals[i].c_str();
+            }
+
+            void* pGauge = GaugeWithLabelValues(_metric, labelVals.size(), cStrLabelVals);
+            return Gauge(_name, _help, pGauge);
+        }
+};
+#endif
 
 #endif
