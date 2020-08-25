@@ -1,0 +1,4 @@
+libpromclient.a
+libpromclient.h
+ctest
+cpptest
