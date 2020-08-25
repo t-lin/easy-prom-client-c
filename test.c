@@ -71,7 +71,7 @@ int main() {
 
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();
-        printf("%d: Setting gauge to %lf\n", i + 1, temp);
+        printf("%d: Setting counters to %lf\n", i + 1, temp);
         CounterAdd(testCounter, temp);
         CounterAdd(testCounter2, temp);
         sleep(1);

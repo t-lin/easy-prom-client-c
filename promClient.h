@@ -15,7 +15,7 @@
 
 /* NOTE: Yes, you're seeing this right. Implementation code in a header file!
  *       For now, this is a small project/library, and it's not being built
- *       into a shared library. Hence, I see no benefit from separating the
+ *       into a shared library. Hence, I see no benefit to separate the
  *       implementation from the header declarations, other than to appease
  *       orthodoxy. If seeing this code triggers you, close the window.
  */
@@ -150,7 +150,7 @@ using std::vector;
 
 /* ========== C++ CLASSES ========== */
 // Simply implement them as wrappers around the C functions
-// TODO: Make base Metric class and derive everything else from it
+// TODO: Make base Metric class and derive everything else from it?
 
 class Gauge {
     private:
@@ -163,6 +163,9 @@ class Gauge {
             _metric = NewGauge(_name.c_str(), _help.c_str());
         }
 
+        // Mainly used by GaugeVec, regular users likely wouldn't use this
+        // constructor. If the user has a raw pointer to the Go Gauge object,
+        // they can use this constructor to wrap it into a C++ object.
         Gauge(string name, string help, void* pGauge) : _name(name), _help(help) {
             assert(pGauge != nullptr);
             _metric = pGauge;
@@ -181,7 +184,6 @@ class Gauge {
         void Sub(double val) {
             GaugeSub(_metric, val);
         }
-
 };
 
 class GaugeVec {
@@ -212,6 +214,63 @@ class GaugeVec {
 
             void* pGauge = GaugeWithLabelValues(_metric, labelVals.size(), cStrLabelVals);
             return Gauge(_name, _help, pGauge);
+        }
+};
+
+class Counter {
+    private:
+        void* _metric = nullptr; // "Pointer" to go-land object
+        string _name;
+        string _help;
+
+    public:
+        Counter(string name, string help) : _name(name), _help(help) {
+            _metric = NewCounter(_name.c_str(), _help.c_str());
+        }
+
+        // Mainly used by CounterVec, regular users likely wouldn't use this
+        // constructor. If the user has a raw pointer to the Go Counter object,
+        // they can use this constructor to wrap it into a C++ object.
+        Counter(string name, string help, void* pCounter) : _name(name), _help(help) {
+            assert(pCounter != nullptr);
+            _metric = pCounter;
+        }
+
+        ~Counter() {}
+
+        void Add(double val) {
+            CounterAdd(_metric, val);
+        }
+};
+
+class CounterVec {
+    private:
+        void* _metric = nullptr; // "Pointer" to go-land object
+        string _name;
+        string _help;
+        vector<string> _labels;
+
+    public:
+        CounterVec(string name, string help, vector<string> labels)
+            : _name(name), _help(help), _labels(labels) {
+
+            const char* cStrLabels[_labels.size()];
+            for (unsigned int i = 0; i < _labels.size(); i++) {
+                cStrLabels[i] = _labels[i].c_str();
+            }
+            _metric = NewCounterVec(_name.c_str(), _help.c_str(), _labels.size(), cStrLabels);
+        }
+
+        ~CounterVec() {}
+
+        Counter WithLabelValues(vector<string> labelVals) {
+            const char* cStrLabelVals[labelVals.size()];
+            for (unsigned int i = 0; i < labelVals.size(); i++) {
+                cStrLabelVals[i] = labelVals[i].c_str();
+            }
+
+            void* pCounter = CounterWithLabelValues(_metric, labelVals.size(), cStrLabelVals);
+            return Counter(_name, _help, pCounter);
         }
 };
 #endif

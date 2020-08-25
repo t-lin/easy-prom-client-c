@@ -62,5 +62,19 @@ int main() {
         sleep(1);
     }
 
+    // Test adding counters created by NewCounter and CounerVec.WithLabelValues
+    Counter testCounter = Counter("test_counter", "Test counter's help");
+
+    CounterVec testCounterVec = CounterVec("testCounterVec", "Test counter vec", labels);
+    Counter testCounter2 = testCounterVec.WithLabelValues(labelVals);
+
+    for (int i = 0; i < NUM_ITER; i++) {
+        temp = generateRandVal();
+        printf("%d: Setting counters to %lf\n", i + 1, temp);
+        testCounter.Add(temp);
+        testCounter2.Add(temp);
+        sleep(1);
+    }
+
     return 0;
 }
