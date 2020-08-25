@@ -1,8 +1,20 @@
-a.out: test.c libpromclient.a promClient.h
-	gcc -Wall -std=c99 -I. $< -L. -lpromclient -pthread -o $@
+CFLAGS += -I. -Wall -std=c99
+LDFLAGS += -L. -lpromclient -pthread
+EXENAME = test
+ARNAME = promclient
 
-libpromclient.a: promClient.go
+all: $(EXENAME)
+
+debug: CFLAGS += -g
+debug: all
+
+$(EXENAME): test.c libpromclient.a promClient.h
+	gcc $(CFLAGS) $< $(LDFLAGS) -o $@
+
+lib: lib$(ARNAME).a
+
+lib$(ARNAME).a: promClient.go
 	go build -buildmode=c-archive -o $@ $<
 
 clean:
-	rm libpromclient.a libpromclient.h a.out
+	rm -f lib$(ARNAME).a lib$(ARNAME).h $(EXENAME)
