@@ -24,8 +24,12 @@ int main() {
     // Create a gauge for temperature
     void* testGauge = NewGauge("test_gauge", "Test gauge's help");
 
-    void* testGaugeVec = NewGaugeVec("testGaugeVec", "Test gauge vec", 2, "label1", "label2");
-    void* testGauge2 = GaugeWithLabelValues(testGaugeVec, 2, "label-val-1", "label-val-2");
+    const char* labels[2] = {"label1", "label2"};
+    const char* labelVals[2] = {"label-val-1", "label-val-2"};
+    int nLabels = sizeof(labels) / sizeof(labels[0]);
+
+    void* testGaugeVec = NewGaugeVec("testGaugeVec", "Test gauge vec", nLabels, labels);
+    void* testGauge2 = GaugeWithLabelValues(testGaugeVec, nLabels, labelVals);
 
     // Test setting gauges created by NewGauge and GaugeVec.WithLabelValues
     double temp = 0;
@@ -38,7 +42,8 @@ int main() {
     }
 
     // Test setting a second gauge created by GaugeVec.WithLabelValues
-    void* testGauge3 = GaugeWithLabelValues(testGaugeVec, 2, "label-val-I", "label-val-II");
+    const char* labelVals2[2] = {"label-val-I", "label-val-II"};
+    void* testGauge3 = GaugeWithLabelValues(testGaugeVec, nLabels, labelVals2);
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();
         printf("%d: Setting gauge to %lf\n", i + 1, temp);
@@ -61,8 +66,8 @@ int main() {
     // Test adding counters created by NewCounter and CounerVec.WithLabelValues
     void* testCounter = NewCounter("test_counter", "Test counter's help");
 
-    void* testCounterVec = NewCounterVec("testCounterVec", "Test counter vec", 2, "label1", "label2");
-    void* testCounter2 = CounterWithLabelValues(testCounterVec, 2, "label-val-1", "label-val-2");
+    void* testCounterVec = NewCounterVec("testCounterVec", "Test counter vec", nLabels, labels);
+    void* testCounter2 = CounterWithLabelValues(testCounterVec, nLabels, labelVals);
 
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();

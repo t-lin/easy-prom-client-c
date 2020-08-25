@@ -16,8 +16,6 @@
 #ifndef _PROM_CLIENT_H_
 #define _PROM_CLIENT_H_
 
-#include <stdarg.h>
-
 #include "libpromclient.h"
 
 /* ========== HELPER FUNCTIONS ========== */
@@ -46,17 +44,11 @@ inline void* NewGauge(const char* name, const char* help) {
 }
 
 // nLabels: The number of labels that follow. Each label must be a c-string.
-void* NewGaugeVec(const char* name, const char* help, int nLabels, ...) {
-    va_list vlLabels;
-    va_start(vlLabels, nLabels);
-
-    char* tmp = NULL;
+void* NewGaugeVec(const char* name, const char* help, int nLabels, const char** labels) {
     GoString gsLabels[nLabels];
     for (int i = 0; i < nLabels; i++) {
-        tmp = va_arg(vlLabels, char*);
-        gsLabels[i] = cStr2GoStr(tmp);
+        gsLabels[i] = cStr2GoStr(labels[i]);
     }
-    va_end(vlLabels);
 
     GoSlice gLabelSlice = {(void*)gsLabels, (GoInt)nLabels, (GoInt)nLabels};
 
@@ -67,17 +59,11 @@ void* NewGaugeVec(const char* name, const char* help, int nLabels, ...) {
 }
 
 // nLabels: The number of label values that follow. Each value must be a c-string.
-void* GaugeWithLabelValues(void* pGaugeVec, int nLabelVals, ...) {
-    va_list vlLabelVals;
-    va_start(vlLabelVals, nLabelVals);
-
-    char* tmp = NULL;
+void* GaugeWithLabelValues(void* pGaugeVec, int nLabelVals, const char** labelVals) {
     GoString gsLabelVals[nLabelVals];
     for (int i = 0; i < nLabelVals; i++) {
-        tmp = va_arg(vlLabelVals, char*);
-        gsLabelVals[i] = cStr2GoStr(tmp);
+        gsLabelVals[i] = cStr2GoStr(labelVals[i]);
     }
-    va_end(vlLabelVals);
 
     GoSlice gLabValSlice = {(void*)gsLabelVals, (GoInt)nLabelVals, (GoInt)nLabelVals};
 
@@ -111,18 +97,13 @@ inline void* NewCounter(const char* name, const char* help) {
     return (void*)goNewCounter(gsName, gsHelp);
 }
 
-// nLabels: The number of labels that follow. Each label must be a c-string.
-void* NewCounterVec(const char* name, const char* help, int nLabels, ...) {
-    va_list vlLabels;
-    va_start(vlLabels, nLabels);
-
-    char* tmp = NULL;
+// nLabels: The number of labels in 'labels'
+// labels: Array of c-string labels
+void* NewCounterVec(const char* name, const char* help, int nLabels, const char** labels) {
     GoString gsLabels[nLabels];
     for (int i = 0; i < nLabels; i++) {
-        tmp = va_arg(vlLabels, char*);
-        gsLabels[i] = cStr2GoStr(tmp);
+        gsLabels[i] = cStr2GoStr(labels[i]);
     }
-    va_end(vlLabels);
 
     GoSlice gLabelSlice = {(void*)gsLabels, (GoInt)nLabels, (GoInt)nLabels};
 
@@ -133,17 +114,11 @@ void* NewCounterVec(const char* name, const char* help, int nLabels, ...) {
 }
 
 // nLabels: The number of label values that follow. Each value must be a c-string.
-void* CounterWithLabelValues(void* pCounterVec, int nLabelVals, ...) {
-    va_list vlLabelVals;
-    va_start(vlLabelVals, nLabelVals);
-
-    char* tmp = NULL;
+void* CounterWithLabelValues(void* pCounterVec, int nLabelVals, const char** labelVals) {
     GoString gsLabelVals[nLabelVals];
     for (int i = 0; i < nLabelVals; i++) {
-        tmp = va_arg(vlLabelVals, char*);
-        gsLabelVals[i] = cStr2GoStr(tmp);
+        gsLabelVals[i] = cStr2GoStr(labelVals[i]);
     }
-    va_end(vlLabelVals);
 
     GoSlice gLabValSlice = {(void*)gsLabelVals, (GoInt)nLabelVals, (GoInt)nLabelVals};
 
