@@ -53,7 +53,8 @@ inline void* NewGauge(const char* name, const char* help) {
     return (void*)goNewGauge(gsName, gsHelp);
 }
 
-// nLabels: The number of labels that follow. Each label must be a c-string.
+// nLabels: The number of labels in 'labels'
+// labels: Array of c-string labels
 void* NewGaugeVec(const char* name, const char* help, int nLabels, const char** labels) {
     GoString gsLabels[nLabels];
     for (int i = 0; i < nLabels; i++) {
@@ -68,7 +69,8 @@ void* NewGaugeVec(const char* name, const char* help, int nLabels, const char** 
     return (void*)goNewGaugeVec(gsName, gsHelp, gLabelSlice);
 }
 
-// nLabels: The number of label values that follow. Each value must be a c-string.
+// nLabels: The number of label values in 'labelVals'
+// labelVals: Array of c-string label values
 void* GaugeWithLabelValues(void* pGaugeVec, int nLabelVals, const char** labelVals) {
     GoString gsLabelVals[nLabelVals];
     for (int i = 0; i < nLabelVals; i++) {
@@ -123,7 +125,8 @@ void* NewCounterVec(const char* name, const char* help, int nLabels, const char*
     return (void*)goNewCounterVec(gsName, gsHelp, gLabelSlice);
 }
 
-// nLabels: The number of label values that follow. Each value must be a c-string.
+// nLabels: The number of label values in 'labelVals'
+// labelVals: Array of c-string label values
 void* CounterWithLabelValues(void* pCounterVec, int nLabelVals, const char** labelVals) {
     GoString gsLabelVals[nLabelVals];
     for (int i = 0; i < nLabelVals; i++) {

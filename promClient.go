@@ -39,6 +39,44 @@ var (
 	counterVecHandles = make(map[unsafe.Pointer]*prometheus.CounterVec)
 )
 
+// ========== HELPER FUNCTIONS ==========
+// Function to force a copy of a string's backing array.
+// Strings in Go use an immutable underlying backing array to store the
+// bytes. When a Go string is copied or assigned, the new string has the
+// same pointer to the backing array. It only ever creates a new array if
+// the string content is modified.
+// Since we're passing strings from "C-land", we can't assume the array is
+// immutable (in fact, they are likely *not* immutable unless they're string
+// literals). Hence we need this function.
+func stringCopy(src string) string {
+	// Super hacky way to force allocation of new backing array
+	// Credit: https://groups.google.com/g/golang-nuts/c/naMCI9Jt6Qg
+	if len(src) == 0 {
+		return ""
+	}
+
+	return src[0:1] + src[1:]
+}
+
+// String slice copying function that utilizes stringCopy()
+func stringSliceCopy(dst, src []string) {
+	min := 0
+	if len(dst) <= len(src) {
+		min = len(dst)
+	} else {
+		min = len(src)
+	}
+
+	if min == 0 {
+		return
+	}
+
+	for i := 0; i < min; i++ {
+		dst[i] = stringCopy(src[i])
+	}
+}
+
+// ========== EXPORTED FUNCTIONS ==========
 //export goStartPromServer
 func goStartPromServer(promEndpoint, metricsPath string) {
 	http.Handle(metricsPath, promhttp.Handler())
@@ -59,11 +97,10 @@ func goNewGauge(name, help string) uintptr {
 
 //export goNewGaugeVec
 func goNewGaugeVec(name, help string, labels []string) uintptr {
-	// NewGaugeVec seems to keep a pointer to the labels slice.
 	// Since the labels slice was created in C, its pointers may not be
-	// valid after this call. Thus, perform deep copy of labels slice.
+	// valid after this call. Thus, perform deep copy of labels.
 	labelsCopy := make([]string, len(labels))
-	copy(labelsCopy, labels)
+	stringSliceCopy(labelsCopy, labels)
 	gaugeVec := promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: name,
@@ -79,8 +116,12 @@ func goNewGaugeVec(name, help string, labels []string) uintptr {
 
 //export goGaugeWithLabelValues
 func goGaugeWithLabelValues(uPtrGaugeVec uintptr, labelVals []string) uintptr {
+	// Since the labelVals slice was created in C, its pointers may not be
+	// valid after this call. Thus, perform deep copy of labelVals.
+	labelValsCopy := make([]string, len(labelVals))
+	stringSliceCopy(labelValsCopy, labelVals)
 	gaugeVec := gaugeVecHandles[unsafe.Pointer(uPtrGaugeVec)]
-	gauge := gaugeVec.WithLabelValues(labelVals...)
+	gauge := gaugeVec.WithLabelValues(labelValsCopy...)
 
 	gaugeHandles[unsafe.Pointer(&gauge)] = gauge
 
@@ -119,11 +160,10 @@ func goNewCounter(name, help string) uintptr {
 
 //export goNewCounterVec
 func goNewCounterVec(name, help string, labels []string) uintptr {
-	// NewCounterVec seems to keep a pointer to the labels slice.
 	// Since the labels slice was created in C, its pointers may not be
-	// valid after this call. Thus, perform deep copy of labels slice.
+	// valid after this call. Thus, perform deep copy of labels.
 	labelsCopy := make([]string, len(labels))
-	copy(labelsCopy, labels)
+	stringSliceCopy(labelsCopy, labels)
 	counterVec := promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: name,
@@ -139,8 +179,12 @@ func goNewCounterVec(name, help string, labels []string) uintptr {
 
 //export goCounterWithLabelValues
 func goCounterWithLabelValues(uPtrCounterVec uintptr, labelVals []string) uintptr {
+	// Since the labelVals slice was created in C, its pointers may not be
+	// valid after this call. Thus, perform deep copy of labelVals.
+	labelValsCopy := make([]string, len(labelVals))
+	stringSliceCopy(labelValsCopy, labelVals)
 	counterVec := counterVecHandles[unsafe.Pointer(uPtrCounterVec)]
-	counter := counterVec.WithLabelValues(labelVals...)
+	counter := counterVec.WithLabelValues(labelValsCopy...)
 
 	counterHandles[unsafe.Pointer(&counter)] = counter
 
