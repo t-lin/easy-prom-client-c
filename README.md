@@ -8,3 +8,10 @@ Obviously, this method sacrifices flexibility/customizability for simplicity.
 **Tested in Ubuntu 16.04 and 18.04**
 
 Simply run `make` to compile the Go library, C test code, and C++ test code. The static library archive and accompanying header file that's created is then used by `promClient.h`, which is the only thing the user's program needs to import. For just the library archive and header files, run `make lib`.
+
+## Why does this exist?
+I needed a C/C++ based Prometheus library that also exports the standard metrics. The other libraries (at the time of writing) doesn't support them yet.
+
+## Known Limitations
+**Avoid globals:** Currently there's an issue when instantiating global metrics (e.g. Counters, Gauges), which may result in the program hanging before `main` is even invoked.
+
