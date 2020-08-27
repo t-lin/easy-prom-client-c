@@ -162,6 +162,8 @@ class Gauge {
         string _help;
 
     public:
+        Gauge() {}
+
         Gauge(string name, string help) : _name(name), _help(help) {
             _metric = NewGauge(_name.c_str(), _help.c_str());
         }
@@ -197,6 +199,8 @@ class GaugeVec {
         vector<string> _labels;
 
     public:
+        GaugeVec() {}
+
         GaugeVec(string name, string help, vector<string> labels)
             : _name(name), _help(help), _labels(labels) {
 
@@ -227,6 +231,8 @@ class Counter {
         string _help;
 
     public:
+        Counter() {}
+
         Counter(string name, string help) : _name(name), _help(help) {
             _metric = NewCounter(_name.c_str(), _help.c_str());
         }
@@ -254,6 +260,8 @@ class CounterVec {
         vector<string> _labels;
 
     public:
+        CounterVec() {}
+
         CounterVec(string name, string help, vector<string> labels)
             : _name(name), _help(help), _labels(labels) {
 
