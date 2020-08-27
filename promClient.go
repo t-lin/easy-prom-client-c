@@ -79,15 +79,15 @@ func stringSliceCopy(dst, src []string) {
 // ========== EXPORTED FUNCTIONS ==========
 //export goStartPromServer
 func goStartPromServer(promEndpoint, metricsPath string) {
-	http.Handle(metricsPath, promhttp.Handler())
-	go http.ListenAndServe(promEndpoint, nil)
+	http.Handle(stringCopy(metricsPath), promhttp.Handler())
+	go http.ListenAndServe(stringCopy(promEndpoint), nil)
 }
 
 //export goNewGauge
 func goNewGauge(name, help string) uintptr {
 	gauge := promauto.NewGauge(prometheus.GaugeOpts{
-		Name: name,
-		Help: help,
+		Name: stringCopy(name),
+		Help: stringCopy(help),
 	})
 
 	gaugeHandles[unsafe.Pointer(&gauge)] = gauge
@@ -103,8 +103,8 @@ func goNewGaugeVec(name, help string, labels []string) uintptr {
 	stringSliceCopy(labelsCopy, labels)
 	gaugeVec := promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: name,
-			Help: help,
+			Name: stringCopy(name),
+			Help: stringCopy(help),
 		},
 		labelsCopy,
 	)
@@ -149,8 +149,8 @@ func goGaugeSub(uPtrGauge uintptr, val float64) {
 //export goNewCounter
 func goNewCounter(name, help string) uintptr {
 	counter := promauto.NewCounter(prometheus.CounterOpts{
-		Name: name,
-		Help: help,
+		Name: stringCopy(name),
+		Help: stringCopy(help),
 	})
 
 	counterHandles[unsafe.Pointer(&counter)] = counter
@@ -166,8 +166,8 @@ func goNewCounterVec(name, help string, labels []string) uintptr {
 	stringSliceCopy(labelsCopy, labels)
 	counterVec := promauto.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: name,
-			Help: help,
+			Name: stringCopy(name),
+			Help: stringCopy(help),
 		},
 		labelsCopy,
 	)
