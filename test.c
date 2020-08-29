@@ -77,5 +77,27 @@ int main() {
         sleep(1);
     }
 
+    // Test adding counters created by NewCounter and CounerVec.WithLabelValues
+    // Since there's no "map" data structure in C, we use two arrays to specify
+    // the quantiles and their errors.
+    int nQuantiles = 3;
+    double quantiles[3] = {0.5, 0.9, 0.99};
+    double errors[3] = {0.05, 0.01, 0.001};
+    int nMaxAge = 60; // Seconds
+    int nAgeBkts = 5; // nMaxAge is split into nAgeBkts buckets of observations.
+                      // In this case, each bucket holds 12 seconds of observations.
+                      // When 60 seconds is up, observations in the last bucket is
+                      // dropped, and a fresh bucket is created at the front. Hence,
+                      // it's a sliding window of buckets.
+    void* testSummary = NewSummary("test_summary", "Test summary's help",
+            nQuantiles, quantiles, errors, nMaxAge, nAgeBkts);
+
+    for (int i = 0; i < NUM_ITER; i++) {
+        temp = generateRandVal();
+        printf("%d: Updating summary w/ observation %lf\n", i + 1, temp);
+        SummaryObserve(testSummary, temp);
+        sleep(1);
+    }
+
     return 0;
 }

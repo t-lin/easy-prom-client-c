@@ -19,6 +19,7 @@ import "C"
 
 import (
 	"net/http"
+	"time"
 	"unsafe"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -37,9 +38,15 @@ var (
 	gaugeVecHandles   = make(map[unsafe.Pointer]*prometheus.GaugeVec)
 	counterHandles    = make(map[unsafe.Pointer]prometheus.Counter)
 	counterVecHandles = make(map[unsafe.Pointer]*prometheus.CounterVec)
+	//histogramHandles    = make(map[unsafe.Pointer]prometheus.Histogram)
+	//histogramVecHandles = make(map[unsafe.Pointer]*prometheus.HistogramVec)
+	summaryHandles    = make(map[unsafe.Pointer]prometheus.Summary)
+	summaryVecHandles = make(map[unsafe.Pointer]*prometheus.SummaryVec)
 )
 
-// ========== HELPER FUNCTIONS ==========
+/* ===========================================================================
+ * HELPER FUNCTIONS AND STRUCTURES
+ * =========================================================================== */
 // Function to force a copy of a string's backing array.
 // Strings in Go use an immutable underlying backing array to store the
 // bytes. When a Go string is copied or assigned, the new string has the
@@ -76,7 +83,24 @@ func stringSliceCopy(dst, src []string) {
 	}
 }
 
-// ========== EXPORTED FUNCTIONS ==========
+// Used to make the 'objectives' map for Summary metrics
+func makeObjectives(quantiles, errors []float64) map[float64]float64 {
+	// Sanity check: Length of quantiles and errors should be identical
+	if len(quantiles) != len(errors) || len(quantiles) == 0 {
+		return nil
+	}
+
+	obj := make(map[float64]float64)
+	for i := 0; i < len(quantiles); i++ {
+		obj[quantiles[i]] = errors[i]
+	}
+
+	return obj
+}
+
+/* ===========================================================================
+ * EXPORTED FUNCTIONS
+ * =========================================================================== */
 //export goStartPromServer
 func goStartPromServer(promEndpoint, metricsPath string) {
 	http.Handle(stringCopy(metricsPath), promhttp.Handler())
@@ -195,6 +219,39 @@ func goCounterWithLabelValues(uPtrCounterVec uintptr, labelVals []string) uintpt
 func goCounterAdd(uPtrCounter uintptr, val float64) {
 	counter := counterHandles[unsafe.Pointer(uPtrCounter)]
 	counter.Add(val)
+}
+
+//export goNewHistogram
+//export goNewHistogramVec
+//export goHistogramObserve
+
+// Specify maxAge in seconds
+//export goNewSummary
+func goNewSummary(name, help string, quantiles, errors []float64, maxAge, nAgeBkts uint32) uintptr {
+	obj := makeObjectives(quantiles, errors)
+	if obj == nil {
+		panic("Unable to make objectives map for Summary")
+	}
+
+	summary := promauto.NewSummary(prometheus.SummaryOpts{
+		Name:       stringCopy(name),
+		Help:       stringCopy(help),
+		Objectives: obj,
+		MaxAge:     time.Duration(maxAge) * time.Second,
+		AgeBuckets: nAgeBkts,
+	})
+
+	summaryHandles[unsafe.Pointer(&summary)] = summary
+
+	return uintptr(unsafe.Pointer(&summary))
+}
+
+//export goNewSummaryVec
+
+//export goSummaryObserve
+func goSummaryObserve(uPtrSummary uintptr, val float64) {
+	summary := summaryHandles[unsafe.Pointer(uPtrSummary)]
+	summary.Observe(val)
 }
 
 func main() {}

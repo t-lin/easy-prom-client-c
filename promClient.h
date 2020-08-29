@@ -144,6 +144,26 @@ inline void CounterAdd(void* pCounter, double val) {
     return;
 }
 
+/* ========== SUMMARY WRAPPER FUNCTIONS ========== */
+void* NewSummary(const char* name, const char* help,
+        int nQuantiles, const double* quantiles, const double* errors,
+        int maxAge, int nAgeBkts) {
+    // TODO: Check to ensure name has no dashes
+    GoString gsName = cStr2GoStr(name);
+    GoString gsHelp = cStr2GoStr(help);
+
+    GoSlice gQuantSlice = {(void*)quantiles, (GoInt)nQuantiles, (GoInt)nQuantiles};
+    GoSlice gErrSlice = {(void*)errors, (GoInt)nQuantiles, (GoInt)nQuantiles};
+
+    return (void*)goNewSummary(gsName, gsHelp, gQuantSlice, gErrSlice, maxAge, nAgeBkts);
+}
+
+inline void SummaryObserve(void* pSummary, double val) {
+    goSummaryObserve((GoUintptr)pSummary, (GoFloat64)val);
+
+    return;
+}
+
 #ifdef __cplusplus
 #include <string>
 #include <vector>
