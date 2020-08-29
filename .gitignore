@@ -2,3 +2,5 @@ libpromclient.a
 libpromclient.h
 ctest
 cpptest
+*.swp
+*.swo
