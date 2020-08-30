@@ -205,10 +205,20 @@ inline void SummaryObserve(void* pSummary, double val) {
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <memory>
 
 using std::string;
 using std::vector;
 using std::unordered_map;
+using std::shared_ptr;
+
+// Declare an empty struct as a dummy 'Metric' type, which is used as a
+// stand-in "object" for the underlying Go metrics. This is needed to enable
+// usage of shared pointers: C++ does not allow assigning pointers of type
+// void* to shared_ptr<void>. Since the compiler doesn't know what the
+// original type is, it has no clue which deleter to use. We don't need a
+// deleter, as we'll be managing the deletion ourselves (this is a TODO).
+typedef struct{} Metric; // Dummy type
 
 /* ========== C++ CLASSES ========== */
 // Simply implement them as wrappers around the C functions
@@ -217,13 +227,13 @@ using std::unordered_map;
 namespace EasyProm {
 class Gauge {
     private:
-        void* _metric = nullptr; // "Pointer" to go-land object
+        shared_ptr<void> _metric = nullptr; // "Pointer" to go-land object
 
     public:
         Gauge() {}
 
         Gauge(string name, string help) {
-            _metric = NewGauge(name.c_str(), help.c_str());
+            _metric = shared_ptr<void>((Metric*)NewGauge(name.c_str(), help.c_str()));
         }
 
         // Mainly used by GaugeVec, regular users likely wouldn't use this
@@ -231,27 +241,31 @@ class Gauge {
         // they can use this constructor to wrap it into a C++ object.
         Gauge(void* pGauge) {
             assert(pGauge != nullptr);
-            _metric = pGauge;
+            _metric = shared_ptr<void>((Metric*)pGauge);
         }
 
-        ~Gauge() {}
+        ~Gauge() {
+            if (_metric.use_count() == 0) {
+                // TODO: Remove Metric from Go
+            }
+        }
 
         void Set(double val) {
-            GaugeSet(_metric, val);
+            GaugeSet(_metric.get(), val);
         }
 
         void Add(double val) {
-            GaugeAdd(_metric, val);
+            GaugeAdd(_metric.get(), val);
         }
 
         void Sub(double val) {
-            GaugeSub(_metric, val);
+            GaugeSub(_metric.get(), val);
         }
 };
 
 class GaugeVec {
     private:
-        void* _metric = nullptr; // "Pointer" to go-land object
+        shared_ptr<void> _metric = nullptr; // "Pointer" to go-land object
 
     public:
         GaugeVec() {}
@@ -261,10 +275,15 @@ class GaugeVec {
             for (unsigned int i = 0; i < labels.size(); i++) {
                 cStrLabels[i] = labels[i].c_str();
             }
-            _metric = NewGaugeVec(name.c_str(), help.c_str(), labels.size(), cStrLabels);
+            _metric = shared_ptr<void>((Metric*)NewGaugeVec(name.c_str(), help.c_str(),
+                                        labels.size(), cStrLabels));
         }
 
-        ~GaugeVec() {}
+        ~GaugeVec() {
+            if (_metric.use_count() == 0) {
+                // TODO: Remove Metric from Go
+            }
+        }
 
         Gauge WithLabelValues(vector<string> labelVals) {
             const char* cStrLabelVals[labelVals.size()];
@@ -272,20 +291,20 @@ class GaugeVec {
                 cStrLabelVals[i] = labelVals[i].c_str();
             }
 
-            void* pGauge = GaugeWithLabelValues(_metric, labelVals.size(), cStrLabelVals);
+            void* pGauge = GaugeWithLabelValues(_metric.get(), labelVals.size(), cStrLabelVals);
             return Gauge(pGauge);
         }
 };
 
 class Counter {
     private:
-        void* _metric = nullptr; // "Pointer" to go-land object
+        shared_ptr<void> _metric = nullptr; // "Pointer" to go-land object
 
     public:
         Counter() {}
 
         Counter(string name, string help) {
-            _metric = NewCounter(name.c_str(), help.c_str());
+            _metric = shared_ptr<void>((Metric*)NewCounter(name.c_str(), help.c_str()));
         }
 
         // Mainly used by CounterVec, regular users likely wouldn't use this
@@ -293,19 +312,23 @@ class Counter {
         // they can use this constructor to wrap it into a C++ object.
         Counter(void* pCounter) {
             assert(pCounter != nullptr);
-            _metric = pCounter;
+            _metric = shared_ptr<void>((Metric*)pCounter);
         }
 
-        ~Counter() {}
+        ~Counter() {
+            if (_metric.use_count() == 0) {
+                // TODO: Remove Metric from Go
+            }
+        }
 
         void Add(double val) {
-            CounterAdd(_metric, val);
+            CounterAdd(_metric.get(), val);
         }
 };
 
 class CounterVec {
     private:
-        void* _metric = nullptr; // "Pointer" to go-land object
+        shared_ptr<void> _metric = nullptr; // "Pointer" to go-land object
 
     public:
         CounterVec() {}
@@ -315,10 +338,15 @@ class CounterVec {
             for (unsigned int i = 0; i < labels.size(); i++) {
                 cStrLabels[i] = labels[i].c_str();
             }
-            _metric = NewCounterVec(name.c_str(), help.c_str(), labels.size(), cStrLabels);
+            _metric = shared_ptr<void>((Metric*)NewCounterVec(name.c_str(), help.c_str(),
+                                        labels.size(), cStrLabels));
         }
 
-        ~CounterVec() {}
+        ~CounterVec() {
+            if (_metric.use_count() == 0) {
+                // TODO: Remove Metric from Go
+            }
+        }
 
         Counter WithLabelValues(vector<string> labelVals) {
             const char* cStrLabelVals[labelVals.size()];
@@ -326,14 +354,14 @@ class CounterVec {
                 cStrLabelVals[i] = labelVals[i].c_str();
             }
 
-            void* pCounter = CounterWithLabelValues(_metric, labelVals.size(), cStrLabelVals);
+            void* pCounter = CounterWithLabelValues(_metric.get(), labelVals.size(), cStrLabelVals);
             return Counter(pCounter);
         }
 };
 
 class Summary {
     private:
-        void* _metric = nullptr; // "Pointer" to go-land object
+        shared_ptr<void> _metric = nullptr; // "Pointer" to go-land object
 
     public:
         Summary() {}
@@ -349,8 +377,8 @@ class Summary {
                 errors[i] = objIter->second;
             }
 
-            _metric = NewSummary(name.c_str(), help.c_str(), nQuantiles,
-                                    quantiles, errors, maxAge, nAgeBkts);
+            _metric = shared_ptr<void>((Metric*)NewSummary(name.c_str(), help.c_str(),
+                                        nQuantiles, quantiles, errors, maxAge, nAgeBkts));
         }
 
         // Mainly used by SummaryVec, regular users likely wouldn't use this
@@ -358,19 +386,23 @@ class Summary {
         // they can use this constructor to wrap it into a C++ object.
         Summary(void* pSummary) {
             assert(pSummary != nullptr);
-            _metric = pSummary;
+            _metric = shared_ptr<void>((Metric*)pSummary);
         }
 
-        ~Summary() {}
+        ~Summary() {
+            if (_metric.use_count() == 0) {
+                // TODO: Remove Metric from Go
+            }
+        }
 
         void Observe(double val) {
-            SummaryObserve(_metric, val);
+            SummaryObserve(_metric.get(), val);
         }
 };
 
 class SummaryVec {
     private:
-        void* _metric = nullptr; // "Pointer" to go-land object
+        shared_ptr<void> _metric = nullptr; // "Pointer" to go-land object
 
     public:
         SummaryVec() {}
@@ -392,11 +424,16 @@ class SummaryVec {
                 errors[i] = objIter->second;
             }
 
-            _metric = NewSummaryVec(name.c_str(), help.c_str(), labels.size(), cStrLabels,
-                                    nQuantiles, quantiles, errors, maxAge, nAgeBkts);
+            _metric = shared_ptr<void>((Metric*)NewSummaryVec(name.c_str(), help.c_str(),
+                                        labels.size(), cStrLabels, nQuantiles,
+                                        quantiles, errors, maxAge, nAgeBkts));
         }
 
-        ~SummaryVec() {}
+        ~SummaryVec() {
+            if (_metric.use_count() == 0) {
+                // TODO: Remove Metric from Go
+            }
+        }
 
         Summary WithLabelValues(vector<string> labelVals) {
             const char* cStrLabelVals[labelVals.size()];
@@ -404,7 +441,7 @@ class SummaryVec {
                 cStrLabelVals[i] = labelVals[i].c_str();
             }
 
-            void* pSummary = SummaryWithLabelValues(_metric, labelVals.size(), cStrLabelVals);
+            void* pSummary = SummaryWithLabelValues(_metric.get(), labelVals.size(), cStrLabelVals);
             return Summary(pSummary);
         }
 };
