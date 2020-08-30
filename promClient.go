@@ -250,14 +250,22 @@ func goNewSummary(name, help string, quantiles, errors []float64, maxAge, nAgeBk
 func goNewSummaryVec(name, help string, labels []string,
 	quantiles, errors []float64, maxAge, nAgeBkts uint32) uintptr {
 
+	obj := makeObjectives(quantiles, errors)
+	if obj == nil {
+		panic("Unable to make objectives map for Summary")
+	}
+
 	// Since the labels slice was created in C, its pointers may not be
 	// valid after this call. Thus, perform deep copy of labels.
 	labelsCopy := make([]string, len(labels))
 	stringSliceCopy(labelsCopy, labels)
 	summaryVec := promauto.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Name: stringCopy(name),
-			Help: stringCopy(help),
+			Name:       stringCopy(name),
+			Help:       stringCopy(help),
+			Objectives: obj,
+			MaxAge:     time.Duration(maxAge) * time.Second,
+			AgeBuckets: nAgeBkts,
 		},
 		labelsCopy,
 	)
