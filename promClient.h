@@ -349,6 +349,7 @@ class Summary {
         void* _metric = nullptr; // "Pointer" to go-land object
         string _name;
         string _help;
+        unordered_map<double, double> _objectives;
         int _maxAge = 0;
         int _numBkts = 0;
 
@@ -357,13 +358,13 @@ class Summary {
 
         Summary(string name, string help, unordered_map<double, double> objectives,
                 int maxAge = 60, int nAgeBkts = 5)
-                : _name(name), _help(help), _maxAge(maxAge), _numBkts(nAgeBkts) {
+                : _name(name), _help(help), _objectives(objectives),
+                  _maxAge(maxAge), _numBkts(nAgeBkts) {
 
-            int nQuantiles = objectives.size();
+            int nQuantiles = _objectives.size();
             double quantiles[nQuantiles];
             double errors[nQuantiles];
-            auto objIter = objectives.begin();
-
+            auto objIter = _objectives.begin();
             for (int i = 0; i < nQuantiles; i++, objIter++) {
                 quantiles[i] = objIter->first;
                 errors[i] = objIter->second;
@@ -388,7 +389,54 @@ class Summary {
         }
 };
 
+class SummaryVec {
+    private:
+        void* _metric = nullptr; // "Pointer" to go-land object
+        string _name;
+        string _help;
+        vector<string> _labels;
+        unordered_map<double, double> _objectives;
+        int _maxAge = 0;
+        int _numBkts = 0;
 
+    public:
+        SummaryVec() {}
+
+        SummaryVec(string name, string help, vector<string> labels,
+                unordered_map<double, double> objectives, int maxAge = 60, int nAgeBkts = 5)
+                : _name(name), _help(help), _labels(labels), _objectives(objectives),
+                  _maxAge(maxAge), _numBkts(nAgeBkts) {
+
+            const char* cStrLabels[_labels.size()];
+            for (unsigned int i = 0; i < _labels.size(); i++) {
+                cStrLabels[i] = _labels[i].c_str();
+            }
+
+            int nQuantiles = _objectives.size();
+            double quantiles[nQuantiles];
+            double errors[nQuantiles];
+            auto objIter = _objectives.begin();
+            for (int i = 0; i < nQuantiles; i++, objIter++) {
+                quantiles[i] = objIter->first;
+                errors[i] = objIter->second;
+            }
+
+            _metric = NewSummaryVec(_name.c_str(), _help.c_str(), _labels.size(), cStrLabels,
+                                    nQuantiles, quantiles, errors, _maxAge, _numBkts);
+        }
+
+        ~SummaryVec() {}
+
+        Summary WithLabelValues(vector<string> labelVals) {
+            const char* cStrLabelVals[labelVals.size()];
+            for (unsigned int i = 0; i < labelVals.size(); i++) {
+                cStrLabelVals[i] = labelVals[i].c_str();
+            }
+
+            void* pSummary = SummaryWithLabelValues(_metric, labelVals.size(), cStrLabelVals);
+            return Summary(_name, _help, pSummary);
+        }
+};
 #endif
 
 #endif

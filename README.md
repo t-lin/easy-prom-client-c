@@ -3,7 +3,7 @@ A super simplified (i.e. dumbed down) C and C++ client for Prometheus. It's esse
 
 Obviously, this method sacrifices flexibility/customizability for simplicity. See `test.c` and `test.cpp` for usage examples.
 
-**Everything here should be considered a work in progress. Currently only supports creating Gauge and Counter metrics.**
+**Everything here should be considered a work in progress. Currently only supports creating Gauge, Counter, and Summary metrics.**
 
 **Tested in Ubuntu 16.04 with gcc/g++ 5.4 and golang 1.13.9**
 

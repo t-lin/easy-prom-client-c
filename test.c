@@ -94,7 +94,7 @@ int main() {
 
     void* testSummaryVec = NewSummaryVec("testSummaryVec", "Test summary vec",
             nLabels, labels, nQuantiles, quantiles, errors, nMaxAge, nAgeBkts);
-    void* testSummary2 = SummaryWithLabelValues(testSummaryVec, nLabels, labelVals);
+    void* testSummary2 = SummaryWithLabelValues(testSummaryVec, nLabels, labelVals2);
 
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();

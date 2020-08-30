@@ -91,11 +91,15 @@ int main() {
                       // it's a sliding window of buckets.
     Summary testSummary = Summary("test_summary", "Test summary's help",
                                 objectives, nMaxAge, nAgeBkts);
+    SummaryVec testSummaryVec = SummaryVec("testSummaryVec", "Test summary vec",
+                                        labels, objectives, nMaxAge, nAgeBkts);
+    Summary testSummary2 = testSummaryVec.WithLabelValues(labelVals2);
 
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();
         printf("%d: Updating summary w/ observation %lf\n", i + 1, temp);
         testSummary.Observe(temp);
+        testSummary2.Observe(temp);
         sleep(1);
     }
 
