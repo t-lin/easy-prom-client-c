@@ -214,23 +214,22 @@ using std::unordered_map;
 // Simply implement them as wrappers around the C functions
 // TODO: Make base Metric class and derive everything else from it?
 
+namespace EasyProm {
 class Gauge {
     private:
         void* _metric = nullptr; // "Pointer" to go-land object
-        string _name;
-        string _help;
 
     public:
         Gauge() {}
 
-        Gauge(string name, string help) : _name(name), _help(help) {
-            _metric = NewGauge(_name.c_str(), _help.c_str());
+        Gauge(string name, string help) {
+            _metric = NewGauge(name.c_str(), help.c_str());
         }
 
         // Mainly used by GaugeVec, regular users likely wouldn't use this
         // constructor. If the user has a raw pointer to the Go Gauge object,
         // they can use this constructor to wrap it into a C++ object.
-        Gauge(string name, string help, void* pGauge) : _name(name), _help(help) {
+        Gauge(void* pGauge) {
             assert(pGauge != nullptr);
             _metric = pGauge;
         }
@@ -253,21 +252,16 @@ class Gauge {
 class GaugeVec {
     private:
         void* _metric = nullptr; // "Pointer" to go-land object
-        string _name;
-        string _help;
-        vector<string> _labels;
 
     public:
         GaugeVec() {}
 
-        GaugeVec(string name, string help, vector<string> labels)
-                : _name(name), _help(help), _labels(labels) {
-
-            const char* cStrLabels[_labels.size()];
-            for (unsigned int i = 0; i < _labels.size(); i++) {
-                cStrLabels[i] = _labels[i].c_str();
+        GaugeVec(string name, string help, vector<string> labels) {
+            const char* cStrLabels[labels.size()];
+            for (unsigned int i = 0; i < labels.size(); i++) {
+                cStrLabels[i] = labels[i].c_str();
             }
-            _metric = NewGaugeVec(_name.c_str(), _help.c_str(), _labels.size(), cStrLabels);
+            _metric = NewGaugeVec(name.c_str(), help.c_str(), labels.size(), cStrLabels);
         }
 
         ~GaugeVec() {}
@@ -279,27 +273,25 @@ class GaugeVec {
             }
 
             void* pGauge = GaugeWithLabelValues(_metric, labelVals.size(), cStrLabelVals);
-            return Gauge(_name, _help, pGauge);
+            return Gauge(pGauge);
         }
 };
 
 class Counter {
     private:
         void* _metric = nullptr; // "Pointer" to go-land object
-        string _name;
-        string _help;
 
     public:
         Counter() {}
 
-        Counter(string name, string help) : _name(name), _help(help) {
-            _metric = NewCounter(_name.c_str(), _help.c_str());
+        Counter(string name, string help) {
+            _metric = NewCounter(name.c_str(), help.c_str());
         }
 
         // Mainly used by CounterVec, regular users likely wouldn't use this
         // constructor. If the user has a raw pointer to the Go Counter object,
         // they can use this constructor to wrap it into a C++ object.
-        Counter(string name, string help, void* pCounter) : _name(name), _help(help) {
+        Counter(void* pCounter) {
             assert(pCounter != nullptr);
             _metric = pCounter;
         }
@@ -314,21 +306,16 @@ class Counter {
 class CounterVec {
     private:
         void* _metric = nullptr; // "Pointer" to go-land object
-        string _name;
-        string _help;
-        vector<string> _labels;
 
     public:
         CounterVec() {}
 
-        CounterVec(string name, string help, vector<string> labels)
-                : _name(name), _help(help), _labels(labels) {
-
-            const char* cStrLabels[_labels.size()];
-            for (unsigned int i = 0; i < _labels.size(); i++) {
-                cStrLabels[i] = _labels[i].c_str();
+        CounterVec(string name, string help, vector<string> labels) {
+            const char* cStrLabels[labels.size()];
+            for (unsigned int i = 0; i < labels.size(); i++) {
+                cStrLabels[i] = labels[i].c_str();
             }
-            _metric = NewCounterVec(_name.c_str(), _help.c_str(), _labels.size(), cStrLabels);
+            _metric = NewCounterVec(name.c_str(), help.c_str(), labels.size(), cStrLabels);
         }
 
         ~CounterVec() {}
@@ -340,44 +327,36 @@ class CounterVec {
             }
 
             void* pCounter = CounterWithLabelValues(_metric, labelVals.size(), cStrLabelVals);
-            return Counter(_name, _help, pCounter);
+            return Counter(pCounter);
         }
 };
 
 class Summary {
     private:
         void* _metric = nullptr; // "Pointer" to go-land object
-        string _name;
-        string _help;
-        unordered_map<double, double> _objectives;
-        int _maxAge = 0;
-        int _numBkts = 0;
 
     public:
         Summary() {}
 
         Summary(string name, string help, unordered_map<double, double> objectives,
-                int maxAge = 60, int nAgeBkts = 5)
-                : _name(name), _help(help), _objectives(objectives),
-                  _maxAge(maxAge), _numBkts(nAgeBkts) {
-
-            int nQuantiles = _objectives.size();
+                int maxAge = 60, int nAgeBkts = 5) {
+            int nQuantiles = objectives.size();
             double quantiles[nQuantiles];
             double errors[nQuantiles];
-            auto objIter = _objectives.begin();
+            auto objIter = objectives.begin();
             for (int i = 0; i < nQuantiles; i++, objIter++) {
                 quantiles[i] = objIter->first;
                 errors[i] = objIter->second;
             }
 
-            _metric = NewSummary(_name.c_str(), _help.c_str(), nQuantiles,
-                                    quantiles, errors, _maxAge, _numBkts);
+            _metric = NewSummary(name.c_str(), help.c_str(), nQuantiles,
+                                    quantiles, errors, maxAge, nAgeBkts);
         }
 
         // Mainly used by SummaryVec, regular users likely wouldn't use this
         // constructor. If the user has a raw pointer to the Go Summary object,
         // they can use this constructor to wrap it into a C++ object.
-        Summary(string name, string help, void* pSummary) : _name(name), _help(help) {
+        Summary(void* pSummary) {
             assert(pSummary != nullptr);
             _metric = pSummary;
         }
@@ -392,37 +371,29 @@ class Summary {
 class SummaryVec {
     private:
         void* _metric = nullptr; // "Pointer" to go-land object
-        string _name;
-        string _help;
-        vector<string> _labels;
-        unordered_map<double, double> _objectives;
-        int _maxAge = 0;
-        int _numBkts = 0;
 
     public:
         SummaryVec() {}
 
         SummaryVec(string name, string help, vector<string> labels,
-                unordered_map<double, double> objectives, int maxAge = 60, int nAgeBkts = 5)
-                : _name(name), _help(help), _labels(labels), _objectives(objectives),
-                  _maxAge(maxAge), _numBkts(nAgeBkts) {
+                unordered_map<double, double> objectives, int maxAge = 60, int nAgeBkts = 5) {
 
-            const char* cStrLabels[_labels.size()];
-            for (unsigned int i = 0; i < _labels.size(); i++) {
-                cStrLabels[i] = _labels[i].c_str();
+            const char* cStrLabels[labels.size()];
+            for (unsigned int i = 0; i < labels.size(); i++) {
+                cStrLabels[i] = labels[i].c_str();
             }
 
-            int nQuantiles = _objectives.size();
+            int nQuantiles = objectives.size();
             double quantiles[nQuantiles];
             double errors[nQuantiles];
-            auto objIter = _objectives.begin();
+            auto objIter = objectives.begin();
             for (int i = 0; i < nQuantiles; i++, objIter++) {
                 quantiles[i] = objIter->first;
                 errors[i] = objIter->second;
             }
 
-            _metric = NewSummaryVec(_name.c_str(), _help.c_str(), _labels.size(), cStrLabels,
-                                    nQuantiles, quantiles, errors, _maxAge, _numBkts);
+            _metric = NewSummaryVec(name.c_str(), help.c_str(), labels.size(), cStrLabels,
+                                    nQuantiles, quantiles, errors, maxAge, nAgeBkts);
         }
 
         ~SummaryVec() {}
@@ -434,9 +405,10 @@ class SummaryVec {
             }
 
             void* pSummary = SummaryWithLabelValues(_metric, labelVals.size(), cStrLabelVals);
-            return Summary(_name, _help, pSummary);
+            return Summary(pSummary);
         }
 };
+} // End namespace EasyProm
 #endif
 
 #endif

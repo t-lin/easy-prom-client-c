@@ -42,8 +42,8 @@ int main() {
     }
 
     // Test setting a second gauge created by GaugeVec.WithLabelValues
-    const char* labelVals2[2] = {"label-val-I", "label-val-II"};
-    void* testGauge3 = GaugeWithLabelValues(testGaugeVec, nLabels, labelVals2);
+    labelVals[0] = "label-val-I"; labelVals[1] = "label-val-II";
+    void* testGauge3 = GaugeWithLabelValues(testGaugeVec, nLabels, labelVals);
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();
         printf("%d: Setting gauge to %lf\n", i + 1, temp);
@@ -64,6 +64,7 @@ int main() {
     }
 
     // Test adding counters created by NewCounter and CounerVec.WithLabelValues
+    labelVals[0] = "label-val-ONE"; labelVals[1] = "label-val-TWO";
     void* testCounter = NewCounter("test_counter", "Test counter's help");
 
     void* testCounterVec = NewCounterVec("testCounterVec", "Test counter vec", nLabels, labels);
@@ -78,6 +79,8 @@ int main() {
     }
 
     // Test adding summary created by NewSummary and SummaryVec.WithLabelValues
+    labelVals[0] = "label-val-UN"; labelVals[1] = "label-val-DEUX";
+
     // Since there's no "map" data structure in C, we use two arrays to specify
     // the quantiles and their errors.
     int nQuantiles = 3;
@@ -94,7 +97,7 @@ int main() {
 
     void* testSummaryVec = NewSummaryVec("testSummaryVec", "Test summary vec",
             nLabels, labels, nQuantiles, quantiles, errors, nMaxAge, nAgeBkts);
-    void* testSummary2 = SummaryWithLabelValues(testSummaryVec, nLabels, labelVals2);
+    void* testSummary2 = SummaryWithLabelValues(testSummaryVec, nLabels, labelVals);
 
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();

@@ -12,6 +12,7 @@
 #define MY_RAND_MAX 1000.0
 
 using namespace std;
+using namespace EasyProm;
 
 // Generates random value between [0, MY_RAND_MAX]
 double generateRandVal() {
@@ -44,8 +45,8 @@ int main() {
     }
 
     // Test setting a second gauge created by GaugeVec.WithLabelValues
-    vector<string> labelVals2 = {"label-val-I", "label-val-II"};
-    Gauge testGauge3 = testGaugeVec.WithLabelValues(labelVals2);
+    labelVals[0] = "label-val-I"; labelVals[1] = "label-val-II";
+    Gauge testGauge3 = testGaugeVec.WithLabelValues(labelVals);
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();
         printf("%d: Setting gauge to %lf\n", i + 1, temp);
@@ -66,6 +67,7 @@ int main() {
     }
 
     // Test adding counters created by NewCounter and CounerVec.WithLabelValues
+    labelVals[0] = "label-val-ONE"; labelVals[1] = "label-val-TWO";
     Counter testCounter = Counter("test_counter", "Test counter's help");
 
     CounterVec testCounterVec = CounterVec("testCounterVec", "Test counter vec", labels);
@@ -80,6 +82,8 @@ int main() {
     }
 
     // Test adding summary created by NewSummary and SummaryVec.WithLabelValues
+    labelVals[0] = "label-val-UN"; labelVals[1] = "label-val-DEUX";
+
     // Since there's no "map" data structure in C, we use two arrays to specify
     // the quantiles and their errors.
     unordered_map<double, double> objectives = {{0.5, 0.05}, {0.9, 0.01}, {0.99, 0.001}};
@@ -93,7 +97,7 @@ int main() {
                                 objectives, nMaxAge, nAgeBkts);
     SummaryVec testSummaryVec = SummaryVec("testSummaryVec", "Test summary vec",
                                         labels, objectives, nMaxAge, nAgeBkts);
-    Summary testSummary2 = testSummaryVec.WithLabelValues(labelVals2);
+    Summary testSummary2 = testSummaryVec.WithLabelValues(labelVals);
 
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();
