@@ -53,6 +53,11 @@ inline void* NewGauge(const char* name, const char* help) {
     return (void*)goNewGauge(gsName, gsHelp);
 }
 
+inline void UnregisterGauge(void* pGauge) {
+    goUnregisterGauge((GoUintptr)pGauge);
+    return;
+}
+
 // nLabels: The number of labels in 'labels'
 // labels: Array of c-string labels
 void* NewGaugeVec(const char* name, const char* help, int nLabels, const char** labels) {
@@ -68,6 +73,11 @@ void* NewGaugeVec(const char* name, const char* help, int nLabels, const char** 
     GoString gsHelp = cStr2GoStr(help);
 
     return (void*)goNewGaugeVec(gsName, gsHelp, gLabelSlice);
+}
+
+inline void UnregisterGaugeVec(void* pGaugeVec) {
+    goUnregisterGaugeVec((GoUintptr)pGaugeVec);
+    return;
 }
 
 // nLabels: The number of label values in 'labelVals'
@@ -110,6 +120,11 @@ inline void* NewCounter(const char* name, const char* help) {
     return (void*)goNewCounter(gsName, gsHelp);
 }
 
+inline void UnregisterCounter(void* pCounter) {
+    goUnregisterCounter((GoUintptr)pCounter);
+    return;
+}
+
 // nLabels: The number of labels in 'labels'
 // labels: Array of c-string labels
 void* NewCounterVec(const char* name, const char* help, int nLabels, const char** labels) {
@@ -125,6 +140,11 @@ void* NewCounterVec(const char* name, const char* help, int nLabels, const char*
     GoString gsHelp = cStr2GoStr(help);
 
     return (void*)goNewCounterVec(gsName, gsHelp, gLabelSlice);
+}
+
+inline void UnregisterCounterVec(void* pCounterVec) {
+    goUnregisterCounterVec((GoUintptr)pCounterVec);
+    return;
 }
 
 // nLabels: The number of label values in 'labelVals'
@@ -160,6 +180,11 @@ void* NewSummary(const char* name, const char* help,
     return (void*)goNewSummary(gsName, gsHelp, gQuantSlice, gErrSlice, maxAge, nAgeBkts);
 }
 
+inline void UnregisterSummary(void* pSummary) {
+    goUnregisterSummary((GoUintptr)pSummary);
+    return;
+}
+
 // nLabels: The number of labels in 'labels'
 // labels: Array of c-string labels
 void* NewSummaryVec(const char* name, const char* help, int nLabels, const char** labels,
@@ -180,6 +205,11 @@ void* NewSummaryVec(const char* name, const char* help, int nLabels, const char*
     GoSlice gErrSlice = {(void*)errors, (GoInt)nQuantiles, (GoInt)nQuantiles};
 
     return (void*)goNewSummaryVec(gsName, gsHelp, gLabelSlice, gQuantSlice, gErrSlice, maxAge, nAgeBkts);
+}
+
+inline void UnregisterSummaryVec(void* pSummaryVec) {
+    goUnregisterSummaryVec((GoUintptr)pSummaryVec);
+    return;
 }
 
 // nLabels: The number of label values in 'labelVals'

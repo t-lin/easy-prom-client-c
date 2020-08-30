@@ -98,6 +98,12 @@ func makeObjectives(quantiles, errors []float64) map[float64]float64 {
 	return obj
 }
 
+// Unregister a metric from the default registry
+// Assumes calling function will remove the metric from the global maps
+func unregisterMetric(metric prometheus.Collector) {
+	prometheus.DefaultRegisterer.Unregister(metric)
+}
+
 /* ===========================================================================
  * EXPORTED FUNCTIONS
  * =========================================================================== */
@@ -119,6 +125,14 @@ func goNewGauge(name, help string) uintptr {
 	return uintptr(unsafe.Pointer(&gauge))
 }
 
+//export goUnregisterGauge
+func goUnregisterGauge(uPtrGauge uintptr) {
+	if gauge, ok := gaugeHandles[unsafe.Pointer(uPtrGauge)]; ok {
+		unregisterMetric(gauge)
+		delete(gaugeHandles, unsafe.Pointer(uPtrGauge))
+	}
+}
+
 //export goNewGaugeVec
 func goNewGaugeVec(name, help string, labels []string) uintptr {
 	// Since the labels slice was created in C, its pointers may not be
@@ -136,6 +150,14 @@ func goNewGaugeVec(name, help string, labels []string) uintptr {
 	gaugeVecHandles[unsafe.Pointer(gaugeVec)] = gaugeVec
 
 	return uintptr(unsafe.Pointer(gaugeVec))
+}
+
+//export goUnregisterGaugeVec
+func goUnregisterGaugeVec(uPtrGaugeVec uintptr) {
+	if gaugeVec, ok := gaugeVecHandles[unsafe.Pointer(uPtrGaugeVec)]; ok {
+		unregisterMetric(gaugeVec)
+		delete(gaugeVecHandles, unsafe.Pointer(uPtrGaugeVec))
+	}
 }
 
 //export goGaugeWithLabelValues
@@ -182,6 +204,11 @@ func goNewCounter(name, help string) uintptr {
 	return uintptr(unsafe.Pointer(&counter))
 }
 
+//export goUnregisterCounter
+func goUnregisterCounter(uPtrCounter uintptr) {
+	delete(counterHandles, unsafe.Pointer(uPtrCounter))
+}
+
 //export goNewCounterVec
 func goNewCounterVec(name, help string, labels []string) uintptr {
 	// Since the labels slice was created in C, its pointers may not be
@@ -199,6 +226,11 @@ func goNewCounterVec(name, help string, labels []string) uintptr {
 	counterVecHandles[unsafe.Pointer(counterVec)] = counterVec
 
 	return uintptr(unsafe.Pointer(counterVec))
+}
+
+//export goUnregisterCounterVec
+func goUnregisterCounterVec(uPtrCounterVec uintptr) {
+	delete(counterVecHandles, unsafe.Pointer(uPtrCounterVec))
 }
 
 //export goCounterWithLabelValues
@@ -246,6 +278,11 @@ func goNewSummary(name, help string, quantiles, errors []float64, maxAge, nAgeBk
 	return uintptr(unsafe.Pointer(&summary))
 }
 
+//export goUnregisterSummary
+func goUnregisterSummary(uPtrSummary uintptr) {
+	delete(summaryHandles, unsafe.Pointer(uPtrSummary))
+}
+
 //export goNewSummaryVec
 func goNewSummaryVec(name, help string, labels []string,
 	quantiles, errors []float64, maxAge, nAgeBkts uint32) uintptr {
@@ -273,6 +310,11 @@ func goNewSummaryVec(name, help string, labels []string,
 	summaryVecHandles[unsafe.Pointer(summaryVec)] = summaryVec
 
 	return uintptr(unsafe.Pointer(summaryVec))
+}
+
+//export goUnregisterSummaryVec
+func goUnregisterSummaryVec(uPtrSummaryVec uintptr) {
+	delete(summaryVecHandles, unsafe.Pointer(uPtrSummaryVec))
 }
 
 //export goSummaryWithLabelValues
