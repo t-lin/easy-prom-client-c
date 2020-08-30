@@ -204,9 +204,11 @@ inline void SummaryObserve(void* pSummary, double val) {
 #ifdef __cplusplus
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 using std::string;
 using std::vector;
+using std::unordered_map;
 
 /* ========== C++ CLASSES ========== */
 // Simply implement them as wrappers around the C functions
@@ -259,7 +261,7 @@ class GaugeVec {
         GaugeVec() {}
 
         GaugeVec(string name, string help, vector<string> labels)
-            : _name(name), _help(help), _labels(labels) {
+                : _name(name), _help(help), _labels(labels) {
 
             const char* cStrLabels[_labels.size()];
             for (unsigned int i = 0; i < _labels.size(); i++) {
@@ -320,7 +322,7 @@ class CounterVec {
         CounterVec() {}
 
         CounterVec(string name, string help, vector<string> labels)
-            : _name(name), _help(help), _labels(labels) {
+                : _name(name), _help(help), _labels(labels) {
 
             const char* cStrLabels[_labels.size()];
             for (unsigned int i = 0; i < _labels.size(); i++) {
@@ -341,6 +343,52 @@ class CounterVec {
             return Counter(_name, _help, pCounter);
         }
 };
+
+class Summary {
+    private:
+        void* _metric = nullptr; // "Pointer" to go-land object
+        string _name;
+        string _help;
+        int _maxAge = 0;
+        int _numBkts = 0;
+
+    public:
+        Summary() {}
+
+        Summary(string name, string help, unordered_map<double, double> objectives,
+                int maxAge = 60, int nAgeBkts = 5)
+                : _name(name), _help(help), _maxAge(maxAge), _numBkts(nAgeBkts) {
+
+            int nQuantiles = objectives.size();
+            double quantiles[nQuantiles];
+            double errors[nQuantiles];
+            auto objIter = objectives.begin();
+
+            for (int i = 0; i < nQuantiles; i++, objIter++) {
+                quantiles[i] = objIter->first;
+                errors[i] = objIter->second;
+            }
+
+            _metric = NewSummary(_name.c_str(), _help.c_str(), nQuantiles,
+                                    quantiles, errors, _maxAge, _numBkts);
+        }
+
+        // Mainly used by SummaryVec, regular users likely wouldn't use this
+        // constructor. If the user has a raw pointer to the Go Summary object,
+        // they can use this constructor to wrap it into a C++ object.
+        Summary(string name, string help, void* pSummary) : _name(name), _help(help) {
+            assert(pSummary != nullptr);
+            _metric = pSummary;
+        }
+
+        ~Summary() {}
+
+        void Observe(double val) {
+            SummaryObserve(_metric, val);
+        }
+};
+
+
 #endif
 
 #endif

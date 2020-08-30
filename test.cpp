@@ -4,11 +4,14 @@
 
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 #include "promClient.h"
 
 #define NUM_ITER 10
 #define MY_RAND_MAX 1000.0
+
+using namespace std;
 
 // Generates random value between [0, MY_RAND_MAX]
 double generateRandVal() {
@@ -73,6 +76,26 @@ int main() {
         printf("%d: Setting counters to %lf\n", i + 1, temp);
         testCounter.Add(temp);
         testCounter2.Add(temp);
+        sleep(1);
+    }
+
+    // Test adding summary created by NewSummary and SummaryVec.WithLabelValues
+    // Since there's no "map" data structure in C, we use two arrays to specify
+    // the quantiles and their errors.
+    unordered_map<double, double> objectives = {{0.5, 0.05}, {0.9, 0.01}, {0.99, 0.001}};
+    int nMaxAge = 60; // Seconds
+    int nAgeBkts = 5; // nMaxAge is split into nAgeBkts buckets of observations.
+                      // In this case, each bucket holds 12 seconds of observations.
+                      // When 60 seconds is up, observations in the last bucket is
+                      // dropped, and a fresh bucket is created at the front. Hence,
+                      // it's a sliding window of buckets.
+    Summary testSummary = Summary("test_summary", "Test summary's help",
+                                objectives, nMaxAge, nAgeBkts);
+
+    for (int i = 0; i < NUM_ITER; i++) {
+        temp = generateRandVal();
+        printf("%d: Updating summary w/ observation %lf\n", i + 1, temp);
+        testSummary.Observe(temp);
         sleep(1);
     }
 
