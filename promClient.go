@@ -152,6 +152,14 @@ func goGaugeWithLabelValues(uPtrGaugeVec uintptr, labelVals []string) uintptr {
 	return uintptr(unsafe.Pointer(&gauge))
 }
 
+//export goGaugeDeleteLabelValues
+func goGaugeDeleteLabelValues(uPtrGaugeVec uintptr, labelVals []string) {
+	gaugeVec := gaugeVecHandles[unsafe.Pointer(uPtrGaugeVec)]
+	gauge := gaugeVec.WithLabelValues(labelVals...)
+	delete(gaugeHandles, unsafe.Pointer(&gauge))
+	gaugeVec.DeleteLabelValues(labelVals...)
+}
+
 //export goGaugeSet
 func goGaugeSet(uPtrGauge uintptr, val float64) {
 	gauge := gaugeHandles[unsafe.Pointer(uPtrGauge)]
@@ -213,6 +221,14 @@ func goCounterWithLabelValues(uPtrCounterVec uintptr, labelVals []string) uintpt
 	counterHandles[unsafe.Pointer(&counter)] = counter
 
 	return uintptr(unsafe.Pointer(&counter))
+}
+
+//export goCounterDeleteLabelValues
+func goCounterDeleteLabelValues(uPtrCounterVec uintptr, labelVals []string) {
+	counterVec := counterVecHandles[unsafe.Pointer(uPtrCounterVec)]
+	counter := counterVec.WithLabelValues(labelVals...)
+	delete(counterHandles, unsafe.Pointer(&counter))
+	counterVec.DeleteLabelValues(labelVals...)
 }
 
 //export goCounterAdd
@@ -287,6 +303,14 @@ func goSummaryWithLabelValues(uPtrSummaryVec uintptr, labelVals []string) uintpt
 	summaryHandles[unsafe.Pointer(&summary)] = summary
 
 	return uintptr(unsafe.Pointer(&summary))
+}
+
+//export goSummaryDeleteLabelValues
+func goSummaryDeleteLabelValues(uPtrSummaryVec uintptr, labelVals []string) {
+	summaryVec := summaryVecHandles[unsafe.Pointer(uPtrSummaryVec)]
+	summary := summaryVec.WithLabelValues(labelVals...)
+	delete(summaryHandles, unsafe.Pointer(&summary))
+	summaryVec.DeleteLabelValues(labelVals...)
 }
 
 //export goSummaryObserve

@@ -83,6 +83,17 @@ void* GaugeWithLabelValues(void* pGaugeVec, int nLabelVals, const char** labelVa
     return (void*)goGaugeWithLabelValues((GoUintptr)pGaugeVec, gLabValSlice);
 }
 
+void GaugeDeleteLabelValues(void* pGaugeVec, int nLabelVals, const char** labelVals) {
+    GoString gsLabelVals[nLabelVals];
+    for (int i = 0; i < nLabelVals; i++) {
+        gsLabelVals[i] = cStr2GoStr(labelVals[i]);
+    }
+
+    GoSlice gLabValSlice = {(void*)gsLabelVals, (GoInt)nLabelVals, (GoInt)nLabelVals};
+
+    return goGaugeDeleteLabelValues((GoUintptr)pGaugeVec, gLabValSlice);
+}
+
 inline void GaugeSet(void* pGauge, double val) {
     goGaugeSet((GoUintptr)pGauge, (GoFloat64)val);
 
@@ -140,6 +151,17 @@ void* CounterWithLabelValues(void* pCounterVec, int nLabelVals, const char** lab
     return (void*)goCounterWithLabelValues((GoUintptr)pCounterVec, gLabValSlice);
 }
 
+void CounterDeleteLabelValues(void* pCounterVec, int nLabelVals, const char** labelVals) {
+    GoString gsLabelVals[nLabelVals];
+    for (int i = 0; i < nLabelVals; i++) {
+        gsLabelVals[i] = cStr2GoStr(labelVals[i]);
+    }
+
+    GoSlice gLabValSlice = {(void*)gsLabelVals, (GoInt)nLabelVals, (GoInt)nLabelVals};
+
+    return goCounterDeleteLabelValues((GoUintptr)pCounterVec, gLabValSlice);
+}
+
 inline void CounterAdd(void* pCounter, double val) {
     goCounterAdd((GoUintptr)pCounter, (GoFloat64)val);
 
@@ -193,6 +215,17 @@ void* SummaryWithLabelValues(void* pSummaryVec, int nLabelVals, const char** lab
     GoSlice gLabValSlice = {(void*)gsLabelVals, (GoInt)nLabelVals, (GoInt)nLabelVals};
 
     return (void*)goSummaryWithLabelValues((GoUintptr)pSummaryVec, gLabValSlice);
+}
+
+void SummaryDeleteLabelValues(void* pSummaryVec, int nLabelVals, const char** labelVals) {
+    GoString gsLabelVals[nLabelVals];
+    for (int i = 0; i < nLabelVals; i++) {
+        gsLabelVals[i] = cStr2GoStr(labelVals[i]);
+    }
+
+    GoSlice gLabValSlice = {(void*)gsLabelVals, (GoInt)nLabelVals, (GoInt)nLabelVals};
+
+    return goSummaryDeleteLabelValues((GoUintptr)pSummaryVec, gLabValSlice);
 }
 
 inline void SummaryObserve(void* pSummary, double val) {
@@ -275,6 +308,15 @@ class GaugeVec {
             void* pGauge = GaugeWithLabelValues(_metric, labelVals.size(), cStrLabelVals);
             return Gauge(pGauge);
         }
+
+        void DeleteLabelValues(vector<string> labelVals) {
+            const char* cStrLabelVals[labelVals.size()];
+            for (unsigned int i = 0; i < labelVals.size(); i++) {
+                cStrLabelVals[i] = labelVals[i].c_str();
+            }
+
+            GaugeDeleteLabelValues(_metric, labelVals.size(), cStrLabelVals);
+        }
 };
 
 class Counter {
@@ -328,6 +370,15 @@ class CounterVec {
 
             void* pCounter = CounterWithLabelValues(_metric, labelVals.size(), cStrLabelVals);
             return Counter(pCounter);
+        }
+
+        void DeleteLabelValues(vector<string> labelVals) {
+            const char* cStrLabelVals[labelVals.size()];
+            for (unsigned int i = 0; i < labelVals.size(); i++) {
+                cStrLabelVals[i] = labelVals[i].c_str();
+            }
+
+            CounterDeleteLabelValues(_metric, labelVals.size(), cStrLabelVals);
         }
 };
 
@@ -406,6 +457,15 @@ class SummaryVec {
 
             void* pSummary = SummaryWithLabelValues(_metric, labelVals.size(), cStrLabelVals);
             return Summary(pSummary);
+        }
+
+        void DeleteLabelValues(vector<string> labelVals) {
+            const char* cStrLabelVals[labelVals.size()];
+            for (unsigned int i = 0; i < labelVals.size(); i++) {
+                cStrLabelVals[i] = labelVals[i].c_str();
+            }
+
+            SummaryDeleteLabelValues(_metric, labelVals.size(), cStrLabelVals);
         }
 };
 } // End namespace EasyProm

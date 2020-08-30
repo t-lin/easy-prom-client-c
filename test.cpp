@@ -44,6 +44,8 @@ int main() {
         sleep(1);
     }
 
+    testGaugeVec.DeleteLabelValues(labelVals);
+
     // Test setting a second gauge created by GaugeVec.WithLabelValues
     labelVals[0] = "label-val-I"; labelVals[1] = "label-val-II";
     Gauge testGauge3 = testGaugeVec.WithLabelValues(labelVals);
@@ -53,6 +55,8 @@ int main() {
         testGauge3.Set(temp);
         sleep(1);
     }
+
+    testGaugeVec.DeleteLabelValues(labelVals);
 
     // Test adding and subtracting gauges
     for (int i = 0; i < NUM_ITER; i++) {
@@ -81,6 +85,8 @@ int main() {
         sleep(1);
     }
 
+    testCounterVec.DeleteLabelValues(labelVals);
+
     // Test adding summary created by NewSummary and SummaryVec.WithLabelValues
     labelVals[0] = "label-val-UN"; labelVals[1] = "label-val-DEUX";
 
@@ -106,6 +112,8 @@ int main() {
         testSummary2.Observe(temp);
         sleep(1);
     }
+
+    testSummaryVec.DeleteLabelValues(labelVals);
 
     return 0;
 }
