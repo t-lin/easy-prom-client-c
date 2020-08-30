@@ -63,6 +63,7 @@ void* NewGaugeVec(const char* name, const char* help, int nLabels, const char** 
 
     GoSlice gLabelSlice = {(void*)gsLabels, (GoInt)nLabels, (GoInt)nLabels};
 
+    // TODO: Check to ensure name has no dashes
     GoString gsName = cStr2GoStr(name);
     GoString gsHelp = cStr2GoStr(help);
 
@@ -119,6 +120,7 @@ void* NewCounterVec(const char* name, const char* help, int nLabels, const char*
 
     GoSlice gLabelSlice = {(void*)gsLabels, (GoInt)nLabels, (GoInt)nLabels};
 
+    // TODO: Check to ensure name has no dashes
     GoString gsName = cStr2GoStr(name);
     GoString gsHelp = cStr2GoStr(help);
 
@@ -156,6 +158,41 @@ void* NewSummary(const char* name, const char* help,
     GoSlice gErrSlice = {(void*)errors, (GoInt)nQuantiles, (GoInt)nQuantiles};
 
     return (void*)goNewSummary(gsName, gsHelp, gQuantSlice, gErrSlice, maxAge, nAgeBkts);
+}
+
+// nLabels: The number of labels in 'labels'
+// labels: Array of c-string labels
+void* NewSummaryVec(const char* name, const char* help, int nLabels, const char** labels,
+        int nQuantiles, const double* quantiles, const double* errors,
+        int maxAge, int nAgeBkts) {
+    GoString gsLabels[nLabels];
+    for (int i = 0; i < nLabels; i++) {
+        gsLabels[i] = cStr2GoStr(labels[i]);
+    }
+
+    GoSlice gLabelSlice = {(void*)gsLabels, (GoInt)nLabels, (GoInt)nLabels};
+
+    // TODO: Check to ensure name has no dashes
+    GoString gsName = cStr2GoStr(name);
+    GoString gsHelp = cStr2GoStr(help);
+
+    GoSlice gQuantSlice = {(void*)quantiles, (GoInt)nQuantiles, (GoInt)nQuantiles};
+    GoSlice gErrSlice = {(void*)errors, (GoInt)nQuantiles, (GoInt)nQuantiles};
+
+    return (void*)goNewSummaryVec(gsName, gsHelp, gLabelSlice, gQuantSlice, gErrSlice, maxAge, nAgeBkts);
+}
+
+// nLabels: The number of label values in 'labelVals'
+// labelVals: Array of c-string label values
+void* SummaryWithLabelValues(void* pSummaryVec, int nLabelVals, const char** labelVals) {
+    GoString gsLabelVals[nLabelVals];
+    for (int i = 0; i < nLabelVals; i++) {
+        gsLabelVals[i] = cStr2GoStr(labelVals[i]);
+    }
+
+    GoSlice gLabValSlice = {(void*)gsLabelVals, (GoInt)nLabelVals, (GoInt)nLabelVals};
+
+    return (void*)goSummaryWithLabelValues((GoUintptr)pSummaryVec, gLabValSlice);
 }
 
 inline void SummaryObserve(void* pSummary, double val) {

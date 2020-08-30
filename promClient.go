@@ -40,7 +40,7 @@ var (
 	counterVecHandles = make(map[unsafe.Pointer]*prometheus.CounterVec)
 	//histogramHandles    = make(map[unsafe.Pointer]prometheus.Histogram)
 	//histogramVecHandles = make(map[unsafe.Pointer]*prometheus.HistogramVec)
-	summaryHandles    = make(map[unsafe.Pointer]prometheus.Summary)
+	summaryHandles    = make(map[unsafe.Pointer]prometheus.Observer)
 	summaryVecHandles = make(map[unsafe.Pointer]*prometheus.SummaryVec)
 )
 
@@ -247,6 +247,39 @@ func goNewSummary(name, help string, quantiles, errors []float64, maxAge, nAgeBk
 }
 
 //export goNewSummaryVec
+func goNewSummaryVec(name, help string, labels []string,
+	quantiles, errors []float64, maxAge, nAgeBkts uint32) uintptr {
+
+	// Since the labels slice was created in C, its pointers may not be
+	// valid after this call. Thus, perform deep copy of labels.
+	labelsCopy := make([]string, len(labels))
+	stringSliceCopy(labelsCopy, labels)
+	summaryVec := promauto.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Name: stringCopy(name),
+			Help: stringCopy(help),
+		},
+		labelsCopy,
+	)
+
+	summaryVecHandles[unsafe.Pointer(summaryVec)] = summaryVec
+
+	return uintptr(unsafe.Pointer(summaryVec))
+}
+
+//export goSummaryWithLabelValues
+func goSummaryWithLabelValues(uPtrSummaryVec uintptr, labelVals []string) uintptr {
+	// Since the labelVals slice was created in C, its pointers may not be
+	// valid after this call. Thus, perform deep copy of labelVals.
+	labelValsCopy := make([]string, len(labelVals))
+	stringSliceCopy(labelValsCopy, labelVals)
+	summaryVec := summaryVecHandles[unsafe.Pointer(uPtrSummaryVec)]
+	summary := summaryVec.WithLabelValues(labelValsCopy...)
+
+	summaryHandles[unsafe.Pointer(&summary)] = summary
+
+	return uintptr(unsafe.Pointer(&summary))
+}
 
 //export goSummaryObserve
 func goSummaryObserve(uPtrSummary uintptr, val float64) {

@@ -77,7 +77,7 @@ int main() {
         sleep(1);
     }
 
-    // Test adding counters created by NewCounter and CounerVec.WithLabelValues
+    // Test adding summary created by NewSummary and SummaryVec.WithLabelValues
     // Since there's no "map" data structure in C, we use two arrays to specify
     // the quantiles and their errors.
     int nQuantiles = 3;
@@ -92,10 +92,15 @@ int main() {
     void* testSummary = NewSummary("test_summary", "Test summary's help",
             nQuantiles, quantiles, errors, nMaxAge, nAgeBkts);
 
+    void* testSummaryVec = NewSummaryVec("testSummaryVec", "Test summary vec",
+            nLabels, labels, nQuantiles, quantiles, errors, nMaxAge, nAgeBkts);
+    void* testSummary2 = SummaryWithLabelValues(testSummaryVec, nLabels, labelVals);
+
     for (int i = 0; i < NUM_ITER; i++) {
         temp = generateRandVal();
         printf("%d: Updating summary w/ observation %lf\n", i + 1, temp);
         SummaryObserve(testSummary, temp);
+        SummaryObserve(testSummary2, temp);
         sleep(1);
     }
 
