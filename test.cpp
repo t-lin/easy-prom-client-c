@@ -22,9 +22,9 @@ double generateRandVal() {
 int main() {
     srand(time(NULL)); // Pseudo-random seed
 
-    printf("Before starting prom server...\n");
-    StartPromServer(":12345", "/metrics");
-    printf("After starting prom server...\n");
+    const char* listen = ":12345";
+    StartPromHandler(listen, "/metrics");
+    printf("Prometheus scrape handler started on %s\n", listen);
 
     // Create a test gauge
     Gauge testGauge = Gauge("test_gauge", "Test gauge's help");

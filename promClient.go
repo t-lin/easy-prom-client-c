@@ -101,8 +101,8 @@ func makeObjectives(quantiles, errors []float64) map[float64]float64 {
 /* ===========================================================================
  * EXPORTED FUNCTIONS
  * =========================================================================== */
-//export goStartPromServer
-func goStartPromServer(promEndpoint, metricsPath string) {
+//export goStartPromHandler
+func goStartPromHandler(promEndpoint, metricsPath string) {
 	http.Handle(stringCopy(metricsPath), promhttp.Handler())
 	go http.ListenAndServe(stringCopy(promEndpoint), nil)
 }

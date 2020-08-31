@@ -36,10 +36,10 @@ inline GoString cStr2GoStr(const char* in) {
 
 
 /* ========== WRAPPER FUNCTIONS FOR GO CODE ========== */
-void StartPromServer(const char* promEndpoint, const char* metricsPath) {
+void StartPromHandler(const char* promEndpoint, const char* metricsPath) {
     GoString gsPromEnd = cStr2GoStr(promEndpoint);
     GoString gsMetricsPath = cStr2GoStr(metricsPath);
-    goStartPromServer(gsPromEnd, gsMetricsPath);
+    goStartPromHandler(gsPromEnd, gsMetricsPath);
 
     return;
 }
