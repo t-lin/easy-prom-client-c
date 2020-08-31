@@ -144,38 +144,44 @@ func goGaugeWithLabelValues(uPtrGaugeVec uintptr, labelVals []string) uintptr {
 	// valid after this call. Thus, perform deep copy of labelVals.
 	labelValsCopy := make([]string, len(labelVals))
 	stringSliceCopy(labelValsCopy, labelVals)
-	gaugeVec := gaugeVecHandles[unsafe.Pointer(uPtrGaugeVec)]
-	gauge := gaugeVec.WithLabelValues(labelValsCopy...)
+	if gaugeVec, ok := gaugeVecHandles[unsafe.Pointer(uPtrGaugeVec)]; ok {
+		gauge := gaugeVec.WithLabelValues(labelValsCopy...)
+		gaugeHandles[unsafe.Pointer(&gauge)] = gauge
 
-	gaugeHandles[unsafe.Pointer(&gauge)] = gauge
+		return uintptr(unsafe.Pointer(&gauge))
+	}
 
-	return uintptr(unsafe.Pointer(&gauge))
+	return 0
 }
 
 //export goGaugeDeleteLabelValues
 func goGaugeDeleteLabelValues(uPtrGaugeVec uintptr, labelVals []string) {
-	gaugeVec := gaugeVecHandles[unsafe.Pointer(uPtrGaugeVec)]
-	gauge := gaugeVec.WithLabelValues(labelVals...)
-	delete(gaugeHandles, unsafe.Pointer(&gauge))
-	gaugeVec.DeleteLabelValues(labelVals...)
+	if gaugeVec, ok := gaugeVecHandles[unsafe.Pointer(uPtrGaugeVec)]; ok {
+		gauge := gaugeVec.WithLabelValues(labelVals...)
+		delete(gaugeHandles, unsafe.Pointer(&gauge))
+		gaugeVec.DeleteLabelValues(labelVals...)
+	}
 }
 
 //export goGaugeSet
 func goGaugeSet(uPtrGauge uintptr, val float64) {
-	gauge := gaugeHandles[unsafe.Pointer(uPtrGauge)]
-	gauge.Set(val)
+	if gauge, ok := gaugeHandles[unsafe.Pointer(uPtrGauge)]; ok {
+		gauge.Set(val)
+	}
 }
 
 //export goGaugeAdd
 func goGaugeAdd(uPtrGauge uintptr, val float64) {
-	gauge := gaugeHandles[unsafe.Pointer(uPtrGauge)]
-	gauge.Add(val)
+	if gauge, ok := gaugeHandles[unsafe.Pointer(uPtrGauge)]; ok {
+		gauge.Add(val)
+	}
 }
 
 //export goGaugeSub
 func goGaugeSub(uPtrGauge uintptr, val float64) {
-	gauge := gaugeHandles[unsafe.Pointer(uPtrGauge)]
-	gauge.Sub(val)
+	if gauge, ok := gaugeHandles[unsafe.Pointer(uPtrGauge)]; ok {
+		gauge.Sub(val)
+	}
 }
 
 //export goNewCounter
@@ -215,26 +221,30 @@ func goCounterWithLabelValues(uPtrCounterVec uintptr, labelVals []string) uintpt
 	// valid after this call. Thus, perform deep copy of labelVals.
 	labelValsCopy := make([]string, len(labelVals))
 	stringSliceCopy(labelValsCopy, labelVals)
-	counterVec := counterVecHandles[unsafe.Pointer(uPtrCounterVec)]
-	counter := counterVec.WithLabelValues(labelValsCopy...)
+	if counterVec, ok := counterVecHandles[unsafe.Pointer(uPtrCounterVec)]; ok {
+		counter := counterVec.WithLabelValues(labelValsCopy...)
+		counterHandles[unsafe.Pointer(&counter)] = counter
 
-	counterHandles[unsafe.Pointer(&counter)] = counter
+		return uintptr(unsafe.Pointer(&counter))
+	}
 
-	return uintptr(unsafe.Pointer(&counter))
+	return 0
 }
 
 //export goCounterDeleteLabelValues
 func goCounterDeleteLabelValues(uPtrCounterVec uintptr, labelVals []string) {
-	counterVec := counterVecHandles[unsafe.Pointer(uPtrCounterVec)]
-	counter := counterVec.WithLabelValues(labelVals...)
-	delete(counterHandles, unsafe.Pointer(&counter))
-	counterVec.DeleteLabelValues(labelVals...)
+	if counterVec, ok := counterVecHandles[unsafe.Pointer(uPtrCounterVec)]; ok {
+		counter := counterVec.WithLabelValues(labelVals...)
+		delete(counterHandles, unsafe.Pointer(&counter))
+		counterVec.DeleteLabelValues(labelVals...)
+	}
 }
 
 //export goCounterAdd
 func goCounterAdd(uPtrCounter uintptr, val float64) {
-	counter := counterHandles[unsafe.Pointer(uPtrCounter)]
-	counter.Add(val)
+	if counter, ok := counterHandles[unsafe.Pointer(uPtrCounter)]; ok {
+		counter.Add(val)
+	}
 }
 
 //export goNewHistogram
@@ -297,26 +307,30 @@ func goSummaryWithLabelValues(uPtrSummaryVec uintptr, labelVals []string) uintpt
 	// valid after this call. Thus, perform deep copy of labelVals.
 	labelValsCopy := make([]string, len(labelVals))
 	stringSliceCopy(labelValsCopy, labelVals)
-	summaryVec := summaryVecHandles[unsafe.Pointer(uPtrSummaryVec)]
-	summary := summaryVec.WithLabelValues(labelValsCopy...)
+	if summaryVec, ok := summaryVecHandles[unsafe.Pointer(uPtrSummaryVec)]; ok {
+		summary := summaryVec.WithLabelValues(labelValsCopy...)
+		summaryHandles[unsafe.Pointer(&summary)] = summary
 
-	summaryHandles[unsafe.Pointer(&summary)] = summary
+		return uintptr(unsafe.Pointer(&summary))
+	}
 
-	return uintptr(unsafe.Pointer(&summary))
+	return 0
 }
 
 //export goSummaryDeleteLabelValues
 func goSummaryDeleteLabelValues(uPtrSummaryVec uintptr, labelVals []string) {
-	summaryVec := summaryVecHandles[unsafe.Pointer(uPtrSummaryVec)]
-	summary := summaryVec.WithLabelValues(labelVals...)
-	delete(summaryHandles, unsafe.Pointer(&summary))
-	summaryVec.DeleteLabelValues(labelVals...)
+	if summaryVec, ok := summaryVecHandles[unsafe.Pointer(uPtrSummaryVec)]; ok {
+		summary := summaryVec.WithLabelValues(labelVals...)
+		delete(summaryHandles, unsafe.Pointer(&summary))
+		summaryVec.DeleteLabelValues(labelVals...)
+	}
 }
 
 //export goSummaryObserve
 func goSummaryObserve(uPtrSummary uintptr, val float64) {
-	summary := summaryHandles[unsafe.Pointer(uPtrSummary)]
-	summary.Observe(val)
+	if summary, ok := summaryHandles[unsafe.Pointer(uPtrSummary)]; ok {
+		summary.Observe(val)
+	}
 }
 
 func main() {}
