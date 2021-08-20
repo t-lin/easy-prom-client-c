@@ -29,7 +29,7 @@
 #include "libpromclient.h"
 
 /* ========== HELPER FUNCTIONS ========== */
-inline GoString cStr2GoStr(const char* in) {
+static inline GoString cStr2GoStr(const char* in) {
     GoString tmp = {in, (ptrdiff_t)strlen(in)};
     return tmp;
 }
@@ -45,7 +45,7 @@ void StartPromHandler(const char* promEndpoint, const char* metricsPath) {
 }
 
 /* ========== GAUGE WRAPPER FUNCTIONS ========== */
-inline void* NewGauge(const char* name, const char* help) {
+void* NewGauge(const char* name, const char* help) {
     // TODO: Check to ensure name has no dashes
     GoString gsName = cStr2GoStr(name);
     GoString gsHelp = cStr2GoStr(help);
@@ -94,26 +94,26 @@ void GaugeDeleteLabelValues(void* pGaugeVec, int nLabelVals, const char** labelV
     return goGaugeDeleteLabelValues((GoUintptr)pGaugeVec, gLabValSlice);
 }
 
-inline void GaugeSet(void* pGauge, double val) {
+static inline void GaugeSet(void* pGauge, double val) {
     goGaugeSet((GoUintptr)pGauge, (GoFloat64)val);
 
     return;
 }
 
-inline void GaugeAdd(void* pGauge, double val) {
+static inline void GaugeAdd(void* pGauge, double val) {
     goGaugeAdd((GoUintptr)pGauge, (GoFloat64)val);
 
     return;
 }
 
-inline void GaugeSub(void* pGauge, double val) {
+static inline void GaugeSub(void* pGauge, double val) {
     goGaugeSub((GoUintptr)pGauge, (GoFloat64)val);
 
     return;
 }
 
 /* ========== COUNTER WRAPPER FUNCTIONS ========== */
-inline void* NewCounter(const char* name, const char* help) {
+void* NewCounter(const char* name, const char* help) {
     // TODO: Check to ensure name has no dashes
     GoString gsName = cStr2GoStr(name);
     GoString gsHelp = cStr2GoStr(help);
@@ -162,7 +162,7 @@ void CounterDeleteLabelValues(void* pCounterVec, int nLabelVals, const char** la
     return goCounterDeleteLabelValues((GoUintptr)pCounterVec, gLabValSlice);
 }
 
-inline void CounterAdd(void* pCounter, double val) {
+static inline void CounterAdd(void* pCounter, double val) {
     goCounterAdd((GoUintptr)pCounter, (GoFloat64)val);
 
     return;
@@ -228,7 +228,7 @@ void SummaryDeleteLabelValues(void* pSummaryVec, int nLabelVals, const char** la
     return goSummaryDeleteLabelValues((GoUintptr)pSummaryVec, gLabValSlice);
 }
 
-inline void SummaryObserve(void* pSummary, double val) {
+static inline void SummaryObserve(void* pSummary, double val) {
     goSummaryObserve((GoUintptr)pSummary, (GoFloat64)val);
 
     return;
